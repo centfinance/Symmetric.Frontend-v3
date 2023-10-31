@@ -1,0 +1,2 @@
+import{_ as t}from"./BalChip-951d5b52.js";import{d as n,b as p,c as r,l as c,A as _,v as l,m as i}from"./runtime-core.esm-bundler-558f8953.js";const d=n({__name:"BalChipNew",props:{size:{default:"sm"}},setup(e){const o=e;return(s,m)=>{const a=t;return p(),r(a,i(o,{color:"orange",class:"uppercase",outline:!1}),{default:c(()=>[_(l(s.$t("new")),1)]),_:1},16)}}});export{d as _};
+//# sourceMappingURL=BalChipNew.vue_vue_type_script_setup_true_lang-8ef0bb16.js.map

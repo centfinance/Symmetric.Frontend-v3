@@ -1,0 +1,1 @@
+.vebal-banner:before{border-width:1px;border-color:rgb(var(--color-yellow-500));content:"";width:16px;height:6px;left:0;top:-5px;position:absolute;border-top-left-radius:8px}.vebal-banner:after{border-width:1px;border-color:rgb(var(--color-yellow-500));content:"";width:16px;height:6px;bottom:-5px;right:0;position:absolute;border-bottom-right-radius:8px}

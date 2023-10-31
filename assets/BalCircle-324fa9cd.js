@@ -1,0 +1,2 @@
+import{d as a,u as c,b as r,p as _,h as l,x as n,z as p}from"./runtime-core.esm-bundler-558f8953.js";import{_ as d}from"./_plugin-vue_export-helper-c27b6911.js";const u=a({__name:"BalCircle",props:{size:{default:"16"},color:{default:"gray"}},setup(s){const e=s,o=c(()=>({[`w-${e.size} h-${e.size}`]:!0,[`bg-${e.color}-500`]:!0}));return(t,i)=>(r(),_("div",{class:n(["bal-circle",p(o)])},[l(t.$slots,"default",{},void 0,!0)],2))}});const b=d(u,[["__scopeId","data-v-eddc705b"]]);export{b as _};
+//# sourceMappingURL=BalCircle-324fa9cd.js.map

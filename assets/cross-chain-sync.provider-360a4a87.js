@@ -1,0 +1,2 @@
+import{S as s}from"./connector-16147cef.js";import"./useGraphQuery-d0a03aea.js";import{aW as r,aX as o}from"./BalBtn-cca6788c.js";var e=(n=>(n.Unsynced="Unsynced",n.Syncing="Syncing",n.Synced="Synced",n.Unknown="Unknown",n))(e||{});const m=Object.keys(s).filter(n=>s[Number(n)].supportsVeBalSync).map(n=>Number(n)),c=Symbol(o.Providers.CrossChainSync),p=()=>r(c);export{e as N,p as u,m as v};
+//# sourceMappingURL=cross-chain-sync.provider-360a4a87.js.map

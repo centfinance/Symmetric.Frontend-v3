@@ -1,0 +1,2 @@
+import{A as o,F as s}from"./AppNav-48c30649.js";import{d as _,b as n,p as r,q as e,j as t,h as p}from"./runtime-core.esm-bundler-558f8953.js";const c={class:"app-body"},l={class:"pb-16"},f=_({__name:"DefaultLayout",setup(d){return(a,u)=>(n(),r("div",null,[e("div",c,[t(o),e("div",l,[p(a.$slots,"default")])]),t(s)]))}});export{f as _};
+//# sourceMappingURL=DefaultLayout.vue_vue_type_style_index_0_lang-0370091f.js.map

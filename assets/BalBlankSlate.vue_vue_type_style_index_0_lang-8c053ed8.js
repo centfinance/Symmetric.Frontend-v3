@@ -1,0 +1,2 @@
+import{d as s,u as l,b as o,p as r,h as c,v as i,x as p,z as _}from"./runtime-core.esm-bundler-558f8953.js";const u=s({__name:"BalBlankSlate",props:{align:{default:"start"}},setup(a){const e=a,n=l(()=>({"items-start":e.align==="start","items-center":e.align==="center","items-end":e.align==="end"}));return(t,d)=>(o(),r("div",{class:p(["bal-blank-slate text-secondary",_(n)])},[c(t.$slots,"default",{textContent:i(t.$t("noContent"))})],2))}});export{u as _};
+//# sourceMappingURL=BalBlankSlate.vue_vue_type_style_index_0_lang-8c053ed8.js.map
