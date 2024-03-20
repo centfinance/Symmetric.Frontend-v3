@@ -113,7 +113,7 @@ export class GaugesDecorator {
       if (gauge.isPreferentialGauge) {
         if (
           // gauge.symbol == '70TSOUL-30tSYMM-gauge' ||
-          gauge.symbol == '50TKIND-50TSOUL-gauge' ||
+          // gauge.symbol == '50TKIND-50TSOUL-gauge' ||
           gauge.symbol == '69Trump-31WTLOS-gauge' ||
           gauge.symbol == '69CMDR-31WTLOS-gauge' ||
           gauge.symbol == '80MST-20USDM-gauge'
