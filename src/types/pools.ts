@@ -164,6 +164,7 @@ export type Pools = {
   };
   Metadata: Record<string, PoolMetadata>;
   Deep: string[];
+  YaPools?: string[];
   BoostedApr: string[];
   DisabledJoins: string[];
   ExitViaInternalBalance?: string[];

@@ -19,21 +19,24 @@ export enum WrapType {
   Unwrap,
 }
 export const isYaPoolWrap = (tokenIn: string, tokenOut: string): boolean => {
-  const { yaPools } = configService.network.tokens.Addresses;
-  console.log(yaPools);
-  if (yaPools) {
+  const { yaNestedPools } = configService.network.tokens.Addresses;
+  console.log(yaNestedPools);
+  if (yaNestedPools) {
     console.log(tokenIn, tokenOut);
-    const isTokenOut = Object.keys(yaPools).includes(tokenOut.toLowerCase())
+    const isTokenOut = Object.keys(yaNestedPools).includes(
+      tokenOut.toLowerCase()
+    )
       ? true
       : false;
     console.log(isTokenOut);
     if (isTokenOut) {
       console.log(
-        yaPools[tokenOut.toLowerCase()].underlying,
+        yaNestedPools[tokenOut.toLowerCase()].underlying,
         tokenIn.toLowerCase()
       );
       return (
-        yaPools[tokenOut.toLowerCase()].underlying === tokenIn.toLowerCase()
+        yaNestedPools[tokenOut.toLowerCase()].underlying ===
+        tokenIn.toLowerCase()
       );
     }
   }
@@ -41,14 +44,15 @@ export const isYaPoolWrap = (tokenIn: string, tokenOut: string): boolean => {
 };
 
 export const isYaPoolUnwrap = (tokenIn: string, tokenOut: string): boolean => {
-  const { yaPools } = configService.network.tokens.Addresses;
-  if (yaPools) {
-    const isTokenIn = Object.keys(yaPools).includes(tokenIn.toLowerCase())
+  const { yaNestedPools } = configService.network.tokens.Addresses;
+  if (yaNestedPools) {
+    const isTokenIn = Object.keys(yaNestedPools).includes(tokenIn.toLowerCase())
       ? true
       : false;
     if (isTokenIn) {
       return (
-        yaPools[tokenIn.toLowerCase()].underlying === tokenOut.toLowerCase()
+        yaNestedPools[tokenIn.toLowerCase()].underlying ===
+        tokenOut.toLowerCase()
       );
     }
   }
@@ -68,9 +72,9 @@ export const isNativeAssetWrap = (
 export const getWrapAction = (tokenIn: string, tokenOut: string): WrapType => {
   const nativeAddress = configService.network.tokens.Addresses.nativeAsset;
   const wNativeAddress = configService.network.tokens.Addresses.wNativeAsset;
-  const { stETH, wstETH, erc4626Wrappers, yaPools } =
+  const { stETH, wstETH, erc4626Wrappers, yaNestedPools } =
     configService.network.tokens.Addresses;
-  console.log(yaPools);
+  console.log(yaNestedPools);
   if (tokenIn === nativeAddress && tokenOut === wNativeAddress)
     return WrapType.Wrap;
 
@@ -110,7 +114,7 @@ export const getWrapOutput = async (
 ): Promise<BigNumber> => {
   if (wrapType === WrapType.NonWrap) throw new Error('Invalid wrap type');
   const wNativeAddress = configService.network.tokens.Addresses.wNativeAsset;
-  const { wstETH, erc4626Wrappers, yaPools } =
+  const { wstETH, erc4626Wrappers, yaNestedPools } =
     configService.network.tokens.Addresses;
 
   if (wrapper === wNativeAddress) return BigNumber.from(wrapAmount);
@@ -131,7 +135,10 @@ export const getWrapOutput = async (
     });
   }
 
-  if (yaPools && Object.keys(yaPools).includes(wrapper.toLowerCase())) {
+  if (
+    yaNestedPools &&
+    Object.keys(yaNestedPools).includes(wrapper.toLowerCase())
+  ) {
     return BigNumber.from(wrapAmount);
   }
   throw new Error('Unknown wrapper');
@@ -156,13 +163,13 @@ export async function wrap(
     ) {
       return wrapERC4626(network, web3, wrapper.toLowerCase(), amount);
     } else if (
-      configs[network].tokens.Addresses.yaPools &&
-      Object.keys(configs[network].tokens.Addresses.yaPools).includes(
+      configs[network].tokens.Addresses.yaNestedPools &&
+      Object.keys(configs[network].tokens.Addresses.yaNestedPools).includes(
         wrapper.toLowerCase()
       )
     ) {
       const yaPool =
-        configs[network].tokens.Addresses.yaPools[wrapper.toLowerCase()];
+        configs[network].tokens.Addresses.yaNestedPools[wrapper.toLowerCase()];
       return wrapYaPool(
         web3,
         yaPool.underlying,

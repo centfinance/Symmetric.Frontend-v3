@@ -8,6 +8,7 @@ import {
   fiatValueOf,
   isDeep,
   isStableLike,
+  isYa,
 } from '@/composables/usePoolHelpers';
 import { useTxState } from '@/composables/useTxState';
 import {
@@ -128,6 +129,8 @@ export const joinPoolProvider = (
    */
   const isDeepPool = computed((): boolean => isDeep(pool.value));
 
+  const isYaPool = computed((): boolean => isYa(pool.value));
+
   // List of token addresses that can be used to join the pool.
   const poolJoinTokens = computed((): string[] => joinTokens(pool.value));
 
@@ -192,7 +195,7 @@ export const joinPoolProvider = (
 
   const shouldSignRelayer = computed(
     (): boolean =>
-      isDeepPool.value &&
+      (isDeepPool.value || isYaPool.value) &&
       !isSingleAssetJoin.value &&
       // Check if Batch Relayer is either approved, or signed
       !(relayerApproval.isUnlocked.value || relayerSignature.value)
@@ -215,6 +218,13 @@ export const joinPoolProvider = (
   );
 
   const joinHandlerType = computed((): JoinHandler => {
+    if (isYaPool.value) {
+      if (isSingleAssetJoin.value) {
+        return JoinHandler.Swap;
+      }
+      return JoinHandler.YieldAccelerated;
+    }
+
     if (isDeepPool.value) {
       if (isSingleAssetJoin.value) {
         return JoinHandler.Swap;

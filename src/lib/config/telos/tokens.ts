@@ -25,7 +25,7 @@ const tokens: TokenConstants = {
       '0x8f7d64ea96d729ef24a0f30b4526d47b80d877b9':
         '0x8edc3bdd08980d5f6672f243cebc58c6c117956a', //woUSDM
     },
-    yaPools: {
+    yaNestedPools: {
       '0x71fd3b5e53e444ed1e8309b578cffd7d33294c59': {
         poolId:
           '0x71fd3b5e53e444ed1e8309b578cffd7d33294c59000000000000000000000026',
@@ -43,6 +43,20 @@ const tokens: TokenConstants = {
           '0x542a31176829f9dda137942c7cabbb4533523ad3000000000000000000000028',
         underlying: '0x8f7d64ea96d729ef24a0f30b4526d47b80d877b9',
         wrapper: '0x8edc3bdd08980d5f6672f243cebc58c6c117956a',
+      },
+    },
+    yaPools: {
+      '0xf0333afa20b852776911edb986061cef1376b4fe00000000000000000000002a': {
+        underlying: [
+          '0x8d97cea50351fb4329d591682b148d43a0c3611b',
+          '0x975ed13fa16857e83e7c493c7741d556eaad4a3f',
+          '0x8f7d64ea96d729ef24a0f30b4526d47b80d877b9',
+        ],
+        wrappers: [
+          '0x953808ef6be397925f71ec0e8892e246882e4804',
+          '0x181f14262e2efd4df781079437eba1aed3343898',
+          '0x8edc3bdd08980d5f6672f243cebc58c6c117956a',
+        ],
       },
     },
     // wstETH: '0xB4B01216a5Bc8F1C8A33CD990A1239030E60C905',

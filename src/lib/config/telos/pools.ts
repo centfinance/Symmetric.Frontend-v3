@@ -130,6 +130,10 @@ const pools: Pools = {
   },
   Deep: [
     '0x5e99843486cf052baf0925a0cdeb40920477295900000000000000000000000b', // USDM/USDC-USDT
+    '0xf0333afa20b852776911edb986061cef1376b4fe00000000000000000000002a', //myaUSDC
+  ],
+  YaPools: [
+    '0xf0333afa20b852776911edb986061cef1376b4fe00000000000000000000002a', // myaUSD
   ],
   Deprecated: {},
   GaugeMigration: {},

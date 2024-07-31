@@ -102,6 +102,11 @@ export function isDeep(pool: Pool): boolean {
   return configService.network.pools.Deep.includes(pool.id);
 }
 
+export function isYa(pool: Pool): boolean {
+  const yaPools = configService.network.pools.YaPools;
+  return yaPools ? yaPools.includes(pool.poolType) : false;
+}
+
 export function isBoosted(pool: Pool) {
   return !!Object.keys(poolMetadata(pool.id)?.features || {}).includes(
     PoolFeature.Boosted
@@ -760,6 +765,9 @@ export function usePoolHelpers(pool: Ref<AnyPool> | Ref<undefined>) {
   const isDeepPool = computed(
     (): boolean => !!pool.value && isDeep(pool.value)
   );
+
+  const isYaPool = computed((): boolean => !!pool.value && isYa(pool.value));
+
   const isShallowComposableStablePool = computed(
     (): boolean => isComposableStablePool.value && !isDeepPool.value
   );
@@ -831,6 +839,7 @@ export function usePoolHelpers(pool: Ref<AnyPool> | Ref<undefined>) {
     isComposableStableLikePool,
     isPreMintedBptPool,
     isDeepPool,
+    isYaPool,
     isShallowComposableStablePool,
     isWeightedPool,
     isWeightedLikePool,

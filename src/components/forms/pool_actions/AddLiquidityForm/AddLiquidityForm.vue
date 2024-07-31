@@ -45,6 +45,7 @@ const showStakeModal = ref(false);
 const {
   managedPoolWithSwappingHalted,
   isDeepPool,
+  isYaPool,
   isPreMintedBptPool,
   poolJoinTokens,
 } = usePoolHelpers(toRef(props, 'pool'));
@@ -109,6 +110,8 @@ async function initializeTokensForm(isSingleAssetJoin: boolean) {
     // joins are possible. In this case we want to default to the wrapped native
     // asset.
     setTokensIn([wrappedNativeAsset.value.address]);
+  } else if (isYaPool) {
+    setTokensIn(joinTokensWithBalance.value);
   } else {
     setTokensIn(joinTokensWithBalance.value);
   }

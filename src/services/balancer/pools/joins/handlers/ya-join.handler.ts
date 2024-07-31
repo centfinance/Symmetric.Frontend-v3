@@ -16,7 +16,7 @@ type JoinResponse = Awaited<
 /**
  * Handles generalized joins for deep pools using SDK functions.
  */
-export class GeneralisedJoinHandler implements JoinPoolHandler {
+export class YaJoinHandler implements JoinPoolHandler {
   private lastJoinRes?: JoinResponse;
 
   constructor(

@@ -11,7 +11,7 @@ import {
   defaultTransactionResponse,
   defaultTxValue,
 } from '@tests/unit/builders/signer';
-import { GeneralisedJoinHandler } from './generalised-join.handler';
+import { GeneralisedJoinHandler } from './ya-join.handler';
 import { initContractConcernWithDefaultMocks } from '@/dependencies/contract.concern.mocks';
 
 initBalancerSdkWithDefaultMocks();

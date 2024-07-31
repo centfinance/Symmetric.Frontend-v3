@@ -9,7 +9,7 @@ import {
   QueryOutput,
 } from './handlers/join-pool.handler';
 import { GeneralisedJoinHandler } from './handlers/generalised-join.handler';
-
+import { YaJoinHandler } from './handlers/ya-join.handler';
 import { BalancerSDK } from '@symmetric-v3/sdk';
 import { ExactInJoinHandler } from './handlers/exact-in-join.handler';
 
@@ -17,6 +17,7 @@ export enum JoinHandler {
   Swap = 'Swap',
   Generalised = 'Generalised',
   ExactIn = 'ExactIn',
+  YieldAccelerated = 'YieldAccelerated',
 }
 
 type HandlerParams = [Ref<Pool>, BalancerSDK];
@@ -55,6 +56,8 @@ export class JoinPoolService {
     switch (type) {
       case JoinHandler.Swap:
         return (this.joinHandler = new SwapJoinHandler(...handlerParams));
+      case JoinHandler.YieldAccelerated:
+        return (this.joinHandler = new YaJoinHandler(...handlerParams));
       case JoinHandler.Generalised:
         return (this.joinHandler = new GeneralisedJoinHandler(
           ...handlerParams

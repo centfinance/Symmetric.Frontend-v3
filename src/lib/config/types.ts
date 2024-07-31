@@ -15,7 +15,7 @@ export type CommonTokens = {
   reward?: string;
   rewards?: string;
   erc4626Wrappers?: Record<string, string>;
-  yaPools?: Record<
+  yaNestedPools?: Record<
     string,
     { poolId: string; underlying: string; wrapper: string }
   >;
