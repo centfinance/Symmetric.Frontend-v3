@@ -19,6 +19,10 @@ export type CommonTokens = {
     string,
     { poolId: string; underlying: string; wrapper: string }
   >;
+  yaPools?: Record<
+    string,
+    { underlying: string[]; wrappers: Record<string, string> }
+  >;
 };
 
 export type TokenConstants = {

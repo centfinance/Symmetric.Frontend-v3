@@ -104,7 +104,7 @@ export function isDeep(pool: Pool): boolean {
 
 export function isYa(pool: Pool): boolean {
   const yaPools = configService.network.pools.YaPools;
-  return yaPools ? yaPools.includes(pool.poolType) : false;
+  return yaPools ? yaPools.includes(pool.id.toLowerCase()) : false;
 }
 
 export function isBoosted(pool: Pool) {

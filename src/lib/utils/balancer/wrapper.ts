@@ -20,20 +20,15 @@ export enum WrapType {
 }
 export const isYaPoolWrap = (tokenIn: string, tokenOut: string): boolean => {
   const { yaNestedPools } = configService.network.tokens.Addresses;
-  console.log(yaNestedPools);
+
   if (yaNestedPools) {
-    console.log(tokenIn, tokenOut);
     const isTokenOut = Object.keys(yaNestedPools).includes(
       tokenOut.toLowerCase()
     )
       ? true
       : false;
-    console.log(isTokenOut);
+
     if (isTokenOut) {
-      console.log(
-        yaNestedPools[tokenOut.toLowerCase()].underlying,
-        tokenIn.toLowerCase()
-      );
       return (
         yaNestedPools[tokenOut.toLowerCase()].underlying ===
         tokenIn.toLowerCase()
@@ -72,14 +67,14 @@ export const isNativeAssetWrap = (
 export const getWrapAction = (tokenIn: string, tokenOut: string): WrapType => {
   const nativeAddress = configService.network.tokens.Addresses.nativeAsset;
   const wNativeAddress = configService.network.tokens.Addresses.wNativeAsset;
-  const { stETH, wstETH, erc4626Wrappers, yaNestedPools } =
+  const { stETH, wstETH, erc4626Wrappers } =
     configService.network.tokens.Addresses;
-  console.log(yaNestedPools);
+
   if (tokenIn === nativeAddress && tokenOut === wNativeAddress)
     return WrapType.Wrap;
 
   if (tokenIn === stETH && tokenOut === wstETH) return WrapType.Wrap;
-  console.log(tokenIn, tokenOut);
+
   if (
     erc4626Wrappers &&
     Object.keys(erc4626Wrappers).includes(tokenIn.toLowerCase()) &&
@@ -99,7 +94,6 @@ export const getWrapAction = (tokenIn: string, tokenOut: string): WrapType => {
   )
     return WrapType.Unwrap;
 
-  console.log('yaPool');
   if (isYaPoolWrap(tokenIn, tokenOut)) return WrapType.Wrap;
 
   if (isYaPoolUnwrap(tokenIn, tokenOut)) return WrapType.Unwrap;

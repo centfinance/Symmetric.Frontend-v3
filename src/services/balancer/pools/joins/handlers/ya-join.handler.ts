@@ -1,5 +1,12 @@
 import { Pool } from '@/services/pool/types';
-import { BalancerSDK, SimulationType } from '@symmetric-v3/sdk';
+import {
+  BalancerSDK,
+  // EncodeJoinPoolInput,
+  // EncodeWrapErc4626Input,
+  // Relayer,
+  SimulationType,
+  // Swap,
+} from '@symmetric-v3/sdk';
 import { TransactionResponse } from '@ethersproject/abstract-provider';
 import { Ref } from 'vue';
 import { JoinParams, JoinPoolHandler, QueryOutput } from './join-pool.handler';
@@ -8,6 +15,7 @@ import { bnum, isSameAddress, selectByAddress } from '@/lib/utils';
 import { TransactionBuilder } from '@/services/web3/transactions/transaction.builder';
 import { configService } from '@/services/config/config.service';
 import { AddressZero } from '@ethersproject/constants';
+import { convertERC4626Wrap } from '@/lib/utils/balancer/erc4626Wrappers';
 
 type JoinResponse = Awaited<
   ReturnType<BalancerSDK['pools']['generalisedJoin']>
@@ -34,6 +42,16 @@ export class YaJoinHandler implements JoinPoolHandler {
     const txBuilder = new TransactionBuilder(params.signer);
     const { to, encodedCall, value } = this.lastJoinRes;
 
+    // const wrapCall = Relayer.encodeWrapErc4626({
+    //   poolId: this.pool.value.id,
+    //   tokens: params.tokensIn,
+    //   amounts: params.amountsIn,
+    //   slippage: params.slippageBps,
+    // });
+
+    // const newCalls: Swap | EncodeJoinPoolInput | EncodeWrapErc4626Input[] =
+    //   rawCalls.unshift();
+
     return txBuilder.raw.sendTransaction({ to, data: encodedCall, value });
   }
 
@@ -45,19 +63,37 @@ export class YaJoinHandler implements JoinPoolHandler {
     relayerSignature,
     approvalActions,
   }: JoinParams): Promise<QueryOutput> {
-    console.log(amountsIn);
-    const evmAmountsIn: string[] = amountsIn.map(({ address, value }) => {
+    const evmAmountsIn: string[] = [];
+    const tokenAddresses: string[] = [];
+
+    for (const { address, value } of amountsIn) {
       const token = selectByAddress(tokensIn, address);
 
-      if (!token || !token.decimals)
+      if (!token || !token.decimals) {
         throw new Error(`Token metadata missing for: ${address}`);
+      }
+      const underlying = this.formatTokenAddress(address);
+      const wrapper =
+        configService.network.tokens.Addresses.yaPools?.[this.pool.value.id]
+          .wrappers[underlying];
 
-      return parseFixed(value || '0', token.decimals).toString();
-    });
+      if (!wrapper) {
+        throw new Error(`Wrapper not found for token: ${address}`);
+      }
 
-    const tokenAddresses: string[] = amountsIn.map(({ address }) =>
-      this.formatTokenAddress(address)
-    );
+      tokenAddresses.push(underlying, this.formatTokenAddress(wrapper));
+
+      const parsedValue = parseFixed(value || '0', token.decimals);
+      const underlyingAmount = parsedValue.mul(20).div(100);
+      const eightyPercent = parsedValue.mul(80).div(100);
+      const wrapperAmount = await convertERC4626Wrap(wrapper, {
+        amount: eightyPercent,
+        isWrap: true,
+      });
+
+      evmAmountsIn.push(underlyingAmount.toString(), wrapperAmount.toString());
+    }
+
     const signerAddress = await signer.getAddress();
     const slippage = slippageBsp.toString();
     const poolId = this.pool.value.id;

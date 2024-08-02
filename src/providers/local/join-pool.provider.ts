@@ -50,6 +50,7 @@ import { useApp } from '@/composables/useApp';
 import { throwQueryError } from '@/lib/utils/queries';
 import { ApprovalAction } from '@/composables/approvals/types';
 import { captureBalancerException } from '@/lib/utils/errors';
+import { configService } from '@/services/config/config.service';
 
 /**
  * TYPES
@@ -202,6 +203,29 @@ export const joinPoolProvider = (
   );
 
   const amountsToApprove = computed(() => {
+    if (isYaPool.value) {
+      return amountsIn.value.flatMap(amountIn => {
+        const wrapper =
+          configService.network.tokens.Addresses.yaPools?.[pool.value.id]
+            .wrappers[amountIn.address];
+        if (!wrapper) {
+          throw new Error(`Wrapper not found for token: ${amountIn.address}`);
+        }
+
+        return [
+          {
+            address: amountIn.address,
+            amount: amountIn.value,
+            spender: appNetworkConfig.addresses.vault,
+          },
+          {
+            address: wrapper,
+            amount: amountIn.value,
+            spender: appNetworkConfig.addresses.vault,
+          },
+        ];
+      });
+    }
     return amountsIn.value.map(amountIn => ({
       address: amountIn.address,
       amount: amountIn.value,
@@ -318,7 +342,6 @@ export const joinPoolProvider = (
       joinPoolService.setJoinHandler(joinHandlerType.value);
       await setApprovalActions();
 
-      console.log('joinHandler:', joinHandlerType.value);
       if (!validateAmountsIn()) return null;
       const output = await joinPoolService.queryJoin({
         amountsIn: amountsInWithValue.value,

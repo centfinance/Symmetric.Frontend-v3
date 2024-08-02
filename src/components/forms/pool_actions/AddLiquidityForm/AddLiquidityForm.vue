@@ -11,6 +11,7 @@ import { isRequired } from '@/lib/utils/validations';
 import { Pool } from '@/services/pool/types';
 import useWeb3 from '@/services/web3/useWeb3';
 import useVeBal from '@/composables/useVeBAL';
+import { configService } from '@/services/config/config.service';
 
 import AddLiquidityPreview from './components/AddLiquidityPreview/AddLiquidityPreview.vue';
 import AddLiquidityTotals from './components/AddLiquidityTotals.vue';
@@ -105,13 +106,24 @@ const joinTokensWithoutBalance = computed<string[]>(() =>
 );
 
 async function initializeTokensForm(isSingleAssetJoin: boolean) {
+  console.log('initializeTokensForm', isYaPool.value);
   if (isSingleAssetJoin) {
     // Single asset joins are only relevant for Composable pools where swap
     // joins are possible. In this case we want to default to the wrapped native
     // asset.
     setTokensIn([wrappedNativeAsset.value.address]);
-  } else if (isYaPool) {
-    setTokensIn(joinTokensWithBalance.value);
+  } else if (isYaPool.value) {
+    const yaPools = configService.network.tokens.Addresses.yaPools;
+    const yaPool = yaPools ? yaPools[props.pool.id] : undefined;
+    if (yaPool) {
+      console.log('yaPool');
+      const tokens = joinTokensWithBalance.value.filter(token =>
+        yaPool.underlying.includes(token)
+      );
+      setTokensIn(tokens);
+    } else {
+      setTokensIn(joinTokensWithBalance.value);
+    }
   } else {
     setTokensIn(joinTokensWithBalance.value);
   }

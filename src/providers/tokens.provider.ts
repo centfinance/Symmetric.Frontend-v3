@@ -500,7 +500,6 @@ export const tokensProvider = (
    * Returns true if the token is the native asset or wrapped native asset
    */
   function isWethOrEth(tokenAddress: string): boolean {
-    console.log(wrappedNativeAsset.value);
     if (!nativeAsset || !nativeAsset.address || !wrappedNativeAsset.value)
       return false;
     return (
