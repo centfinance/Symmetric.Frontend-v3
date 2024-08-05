@@ -9,7 +9,6 @@ import useNetwork from '../useNetwork';
 import usePoolQuery from './usePoolQuery';
 import { AprBreakdown } from '@symmetric-v3/sdk';
 import { getBalancerSDK } from '@/dependencies/balancer-sdk';
-import { subgraphRequest } from '@/lib/utils/subgraph';
 
 type QueryOptions = QueryObserverOptions<AprBreakdown>;
 
@@ -127,40 +126,6 @@ export default function usePoolAprQuery(
   //   }
   // };
 
-  function roundDownTimestamp(timestamp: number): number {
-    const date = new Date(timestamp * 1000); // Convert Unix timestamp to milliseconds
-    const day = date.getUTCDay(); // Get the day of the week (0 - Sunday, 1 - Monday, ..., 6 - Saturday)
-    const daysToThursday = (day + 7 - 4) % 7; // Calculate the number of days to Thursday (4 - Thursday)
-    date.setUTCDate(date.getUTCDate() - daysToThursday); // Subtract the number of days to Thursday
-    date.setUTCHours(0, 0, 0, 0); // Set the time to midnight (00:00:00)
-    return Math.floor(date.getTime() / 1000); // Convert back to Unix timestamp in seconds
-  }
-
-  const gaugeTotalSupply = async (poolAddress: string): Promise<bigint> => {
-    try {
-      const data = await subgraphRequest<{
-        pool: { preferentialGauge: { totalSupply: bigint } };
-      }>({
-        url: useNetwork().networkConfig.subgraphs.gauge,
-        query: {
-          pool: {
-            __args: {
-              id: poolAddress.toLowerCase(),
-            },
-            preferentialGauge: {
-              totalSupply: true,
-            },
-          },
-        },
-      });
-
-      return data.pool.preferentialGauge.totalSupply;
-    } catch (error) {
-      console.error(error);
-      throw error;
-    }
-  };
-
   /**
    * QUERY INPUTS
    */
@@ -185,14 +150,7 @@ export default function usePoolAprQuery(
 
     const apr = await getBalancerSDK().pools.apr(_pool);
     // has local rewards
-    const timestamp = roundDownTimestamp(Date.now() / 1000);
-    const rewards = useNetwork().networkConfig.rewards;
-    console.log(timestamp);
-    if (rewards && rewards[timestamp] && rewards[timestamp][_pool.id]) {
-      // Get gauge
-      const totalSupply = await gaugeTotalSupply(_pool.address);
-      console.log('totalSupply', totalSupply);
-    }
+
     return apr;
   };
   const queryOptions = reactive({

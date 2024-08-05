@@ -15,7 +15,7 @@ import { OnchainDataFormater } from './decorators/onchain-data.formater';
 import { AprBreakdown } from '@symmetric-v3/sdk';
 import useNetwork, { networkId } from '@/composables/useNetwork';
 import { getBalancerSDK } from '@/dependencies/balancer-sdk';
-import { Pool as SDKPool } from '@symmetric-v3/sdk';
+// import { Pool as SDKPool } from '@symmetric-v3/sdk';
 import { captureBalancerException } from '@/lib/utils/errors';
 import { formatUnits } from '@ethersproject/units';
 import { subgraphRequest } from '@/lib/utils/subgraph';
@@ -44,21 +44,21 @@ export default class PoolService {
    * @summary Calculates and sets total liquidity of pool.
    */
   public async setTotalLiquidity(): Promise<string> {
-    let totalLiquidity = this.pool.totalLiquidity;
+    const totalLiquidity = this.pool.totalLiquidity;
 
-    try {
-      const sdkTotalLiquidity = await getBalancerSDK().pools.liquidity(
-        this.pool as unknown as SDKPool
-      );
-      // if totalLiquidity can be computed from coingecko prices, use that
-      // else, use the value retrieved from the subgraph
-      if (bnum(totalLiquidity).gt(0)) {
-        totalLiquidity = sdkTotalLiquidity;
-      }
-    } catch (error) {
-      captureBalancerException({ error });
-      console.error(`Failed to calc liquidity for: ${this.pool.id}`, error);
-    }
+    // try {
+    //   const sdkTotalLiquidity = await getBalancerSDK().pools.liquidity(
+    //     this.pool as unknown as SDKPool
+    //   );
+    //   // if totalLiquidity can be computed from coingecko prices, use that
+    //   // else, use the value retrieved from the subgraph
+    //   if (bnum(totalLiquidity).gt(0)) {
+    //     totalLiquidity = sdkTotalLiquidity;
+    //   }
+    // } catch (error) {
+    //   captureBalancerException({ error });
+    //   console.error(`Failed to calc liquidity for: ${this.pool.id}`, error);
+    // }
 
     return (this.pool.totalLiquidity = totalLiquidity);
   }

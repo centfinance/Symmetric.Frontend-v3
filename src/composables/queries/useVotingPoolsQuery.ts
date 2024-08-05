@@ -70,10 +70,20 @@ export default function useVotingPoolsQuery(
         apiVotingPools = veBalGetVotingList;
       }
       console.log(apiVotingPools);
-      const pools = await new GaugeControllerDecorator().decorateWithVotes(
-        apiVotingPools,
-        account.value
-      );
+
+      const batchSize = 5;
+      const gaugeControllerDecorator = new GaugeControllerDecorator();
+      let pools: VotingPoolWithVotes[] = [];
+
+      for (let i = 0; i < apiVotingPools.length; i += batchSize) {
+        const batch = apiVotingPools.slice(i, i + batchSize);
+        const batchResult = await gaugeControllerDecorator.decorateWithVotes(
+          batch,
+          account.value
+        );
+        pools = pools.concat(batchResult);
+      }
+
       const poolsWithNetwork = pools.map(pool => {
         return {
           ...pool,

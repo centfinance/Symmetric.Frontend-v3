@@ -49,7 +49,7 @@ export default function useGaugesDecorationQuery(
   const queryFn = async () => {
     if (!gauges.value) return null;
     // const _gauges = await gaugesDecorator.decorate(gauges.value, account.value);
-    const batchSize = 8;
+    const batchSize = 4;
     let _gauges: Gauge[] = [];
 
     for (let i = 0; i < gauges.value.length; i += batchSize) {

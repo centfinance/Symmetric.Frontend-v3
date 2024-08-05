@@ -133,43 +133,30 @@ export class PoolDecorator {
   }
 }
 
-// const getWTLOSPrice = async (): Promise<number> => {
+// const getMTRG_wstMTRGPrice = async (): Promise<number> => {
+//   // try {
+//   //   const response = await axios.get(
+//   //     'https://symm-prices.symmetric.workers.dev/prices/0x2077a828fd58025655335a8756dbcfeb7e5bec46'
+//   //   );
+//   //   const price = response.data[0].price;
+//   //   return price;
+//   // } catch (error) {
+//   //   console.error(error);
+//   //   throw error;
+//   // }
 //   try {
 //     const response = await axios.get(
-//       'https://api.coingecko.com/api/v3/simple/token_price/telos?contract_addresses=0xD102cE6A4dB07D247fcc28F366A623Df0938CA9E&vs_currencies=usd'
+//       'https://api.coingecko.com/api/v3/simple/token_price/meter?contract_addresses=0x228ebbee999c6a7ad74a6130e81b12f9fe237ba3&vs_currencies=usd'
 //     );
+//     console.log(response.data);
 //     const price =
-//       response.data['0xd102ce6a4db07d247fcc28f366a623df0938ca9e'].usd;
+//       response.data['0x228ebbee999c6a7ad74a6130e81b12f9fe237ba3'].usd;
 //     return price;
 //   } catch (error) {
 //     console.error(error);
 //     throw error;
 //   }
-// };
-const getMTRG_wstMTRGPrice = async (): Promise<number> => {
-  // try {
-  //   const response = await axios.get(
-  //     'https://symm-prices.symmetric.workers.dev/prices/0x2077a828fd58025655335a8756dbcfeb7e5bec46'
-  //   );
-  //   const price = response.data[0].price;
-  //   return price;
-  // } catch (error) {
-  //   console.error(error);
-  //   throw error;
-  // }
-  try {
-    const response = await axios.get(
-      'https://api.coingecko.com/api/v3/simple/token_price/meter?contract_addresses=0x228ebbee999c6a7ad74a6130e81b12f9fe237ba3&vs_currencies=usd'
-    );
-    console.log(response.data);
-    const price =
-      response.data['0x228ebbee999c6a7ad74a6130e81b12f9fe237ba3'].usd;
-    return price;
-  } catch (error) {
-    console.error(error);
-    throw error;
-  }
-};
+//};
 
 const getTelosRewardPrices = async (): Promise<any> => {
   const rewards = [
@@ -203,9 +190,9 @@ const getTelosRewardPrices = async (): Promise<any> => {
 const setRewardPriceInLocalStorage = async (): Promise<void> => {
   try {
     const { USDM_price, WTLOS_price } = await getTelosRewardPrices();
-    const MTRG_wstMTRG_price = await getMTRG_wstMTRGPrice();
+    // const MTRG_wstMTRG_price = await getMTRG_wstMTRGPrice();
     const timestamp = Date.now();
-    const data = { USDM_price, WTLOS_price, MTRG_wstMTRG_price, timestamp };
+    const data = { USDM_price, WTLOS_price, timestamp };
     localStorage.setItem('REWARD_PRICE', JSON.stringify(data));
   } catch (error) {
     console.error(error);
