@@ -7,6 +7,7 @@ import {
   isDeep,
   isPreMintedBptType,
   isRecoveryExitsOnly,
+  isYa,
   tokenTreeLeafs,
   tokenTreeNodes,
 } from '@/composables/usePoolHelpers';
@@ -204,6 +205,10 @@ export const exitPoolProvider = (
       (isDeep(pool.value) || isComposableStableV1(pool.value))
   );
 
+  const shouldUseYaExit = computed(
+    (): boolean => !isSingleAssetExit.value && isYa(pool.value)
+  );
+
   // Should exit via internal balance only in unique cases.
   // e.g. exiting the Euler linear pools.
   const shouldExitViaInternalBalance = computed(
@@ -224,6 +229,7 @@ export const exitPoolProvider = (
   const exitHandlerType = computed((): ExitHandler => {
     if (shouldUseRecoveryExit.value) return ExitHandler.Recovery;
     if (shouldUseSwapExit.value) return ExitHandler.Swap;
+    if (shouldUseYaExit.value) return ExitHandler.YieldAccelerated;
     if (shouldUseGeneralisedExit.value) return ExitHandler.Generalised;
     if (isSingleAssetExit.value) {
       // If 'max' is clicked we want to pass in the full bpt balance.

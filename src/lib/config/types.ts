@@ -21,7 +21,12 @@ export type CommonTokens = {
   >;
   yaPools?: Record<
     string,
-    { underlying: string[]; wrappers: Record<string, string> }
+    {
+      underlying: string[];
+      wrappers: string[];
+      underlyingWrapperMap: Record<string, string>;
+      wrapperUnderlyingMap: Record<string, string>;
+    }
   >;
 };
 

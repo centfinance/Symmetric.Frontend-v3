@@ -1,5 +1,10 @@
 import { Pool } from '@/services/pool/types';
-import { BalancerSDK, SimulationType } from '@symmetric-v3/sdk';
+import {
+  BalancerRelayer__factory,
+  BalancerSDK,
+  Relayer,
+  SimulationType,
+} from '@symmetric-v3/sdk';
 import { TransactionResponse } from '@ethersproject/abstract-provider';
 import {
   ExitParams,
@@ -8,11 +13,13 @@ import {
   AmountsOut,
 } from './exit-pool.handler';
 import { getBalancerSDK } from '@/dependencies/balancer-sdk';
-import { formatFixed, parseFixed } from '@ethersproject/bignumber';
+import { BigNumber, formatFixed, parseFixed } from '@ethersproject/bignumber';
 import { bnum, isSameAddress } from '@/lib/utils';
 import { flatTokenTree } from '@/composables/usePoolHelpers';
 import { getAddress } from '@ethersproject/address';
 import { TransactionBuilder } from '@/services/web3/transactions/transaction.builder';
+import { configService } from '@/services/config/config.service';
+import { convertERC4626Wrap } from '@/lib/utils/balancer/erc4626Wrappers';
 
 type BalancerSdkType = ReturnType<typeof getBalancerSDK>;
 export type ExitResponse = Awaited<
@@ -22,10 +29,12 @@ export type ExitInfo = Awaited<
   ReturnType<BalancerSdkType['pools']['getExitInfo']>
 >;
 
+const balancerRelayerInterface = BalancerRelayer__factory.createInterface();
+
 /**
  * Handles exits using SDK's generalisedExit function.
  */
-export class GeneralisedExitHandler implements ExitPoolHandler {
+export class YaExitHandler implements ExitPoolHandler {
   private exitTx?: ExitResponse;
   private exitInfo?: ExitInfo;
 
@@ -67,6 +76,13 @@ export class GeneralisedExitHandler implements ExitPoolHandler {
       (bptInValid && approvalActions.length === 0) || !!relayerSignature;
     const balancer = getBalancerSDK();
 
+    const yaPools =
+      configService.network.tokens.Addresses.yaPools?.[this.pool.value.id];
+    const underlyingWrapperMap = yaPools?.wrapperUnderlyingMap || {};
+
+    const aggregatedAmounts: { [address: string]: BigNumber } = {};
+    const wrapperAmounts: { wrapper: string; amount: BigNumber }[] = [];
+
     try {
       if (this.exitInfo && isRelayerApproved) {
         this.exitTx = await balancer.pools.generalisedExit(
@@ -93,11 +109,71 @@ export class GeneralisedExitHandler implements ExitPoolHandler {
       throw new Error('Failed to query exit.');
     }
 
-    console.log('exitInfo', this.exitInfo);
-    console.log('exitTx', this.exitTx);
-
     if (!this.exitInfo && !this.exitTx)
       throw new Error('Failed to query exit.');
+
+    console.log('exitInfo', this.exitInfo);
+
+    const tokensOut = this.exitTx?.tokensOut || this.exitInfo.tokensOut;
+    const estimatedAmountsOut =
+      this.exitTx?.expectedAmountsOut || this.exitInfo.estimatedAmountsOut;
+
+    // Iterate over tokensOut and estimatedAmountsOut
+    for (let i = 0; i < tokensOut.length; i++) {
+      const token = tokensOut[i];
+      const amount = BigNumber.from(estimatedAmountsOut[i]);
+
+      // Check if the token is a wrapper
+      const underlyingToken = underlyingWrapperMap[token];
+
+      if (underlyingToken) {
+        wrapperAmounts.push({ wrapper: token, amount });
+
+        const unwrapAmount = await convertERC4626Wrap(token, {
+          amount,
+          isWrap: false,
+        });
+        // If it's a wrapper, add the amount to the underlying token's amount
+        if (!aggregatedAmounts[underlyingToken]) {
+          aggregatedAmounts[underlyingToken] = BigNumber.from(0);
+        }
+        aggregatedAmounts[underlyingToken] =
+          aggregatedAmounts[underlyingToken].add(unwrapAmount);
+      } else {
+        // If it's not a wrapper, add the amount directly
+        if (!aggregatedAmounts[token]) {
+          aggregatedAmounts[token] = BigNumber.from(0);
+        }
+        aggregatedAmounts[token] = aggregatedAmounts[token].add(amount);
+      }
+    }
+
+    // Update exitInfo with aggregated results
+    if (this.exitTx) {
+      this.exitInfo.tokensOut = Object.keys(aggregatedAmounts);
+      this.exitTx.expectedAmountsOut = Object.values(aggregatedAmounts).map(
+        amount => amount.toString()
+      );
+      const unwrapCalls = wrapperAmounts.map(({ wrapper, amount }) => {
+        return Relayer.encodeUnwrapErc4626({
+          wrappedToken: wrapper,
+          sender: signerAddress,
+          recipient: signerAddress,
+          amount,
+          outputReference: 0,
+        });
+      });
+      this.exitTx.encodedCalls.push(...unwrapCalls);
+      this.exitTx.encodedCall = balancerRelayerInterface.encodeFunctionData(
+        'multicall',
+        [this.exitTx.encodedCalls]
+      );
+    } else {
+      this.exitInfo.tokensOut = Object.keys(aggregatedAmounts);
+      this.exitInfo.estimatedAmountsOut = Object.values(aggregatedAmounts).map(
+        amount => amount.toString()
+      );
+    }
 
     const priceImpact: number = bnum(
       formatFixed(this.exitTx?.priceImpact || this.exitInfo.priceImpact, 18)

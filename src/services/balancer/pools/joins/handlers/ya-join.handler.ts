@@ -1,11 +1,9 @@
 import { Pool } from '@/services/pool/types';
 import {
+  BalancerRelayer__factory,
   BalancerSDK,
-  // EncodeJoinPoolInput,
-  // EncodeWrapErc4626Input,
-  // Relayer,
+  Relayer,
   SimulationType,
-  // Swap,
 } from '@symmetric-v3/sdk';
 import { TransactionResponse } from '@ethersproject/abstract-provider';
 import { Ref } from 'vue';
@@ -16,10 +14,13 @@ import { TransactionBuilder } from '@/services/web3/transactions/transaction.bui
 import { configService } from '@/services/config/config.service';
 import { AddressZero } from '@ethersproject/constants';
 import { convertERC4626Wrap } from '@/lib/utils/balancer/erc4626Wrappers';
+import { BigNumber } from '@ethersproject/bignumber';
 
 type JoinResponse = Awaited<
   ReturnType<BalancerSDK['pools']['generalisedJoin']>
 >;
+
+const balancerRelayerInterface = BalancerRelayer__factory.createInterface();
 
 /**
  * Handles generalized joins for deep pools using SDK functions.
@@ -42,16 +43,6 @@ export class YaJoinHandler implements JoinPoolHandler {
     const txBuilder = new TransactionBuilder(params.signer);
     const { to, encodedCall, value } = this.lastJoinRes;
 
-    // const wrapCall = Relayer.encodeWrapErc4626({
-    //   poolId: this.pool.value.id,
-    //   tokens: params.tokensIn,
-    //   amounts: params.amountsIn,
-    //   slippage: params.slippageBps,
-    // });
-
-    // const newCalls: Swap | EncodeJoinPoolInput | EncodeWrapErc4626Input[] =
-    //   rawCalls.unshift();
-
     return txBuilder.raw.sendTransaction({ to, data: encodedCall, value });
   }
 
@@ -65,6 +56,7 @@ export class YaJoinHandler implements JoinPoolHandler {
   }: JoinParams): Promise<QueryOutput> {
     const evmAmountsIn: string[] = [];
     const tokenAddresses: string[] = [];
+    const wrapperAmountsIn: { wrapper: string; amount: BigNumber }[] = [];
 
     for (const { address, value } of amountsIn) {
       const token = selectByAddress(tokensIn, address);
@@ -75,7 +67,7 @@ export class YaJoinHandler implements JoinPoolHandler {
       const underlying = this.formatTokenAddress(address);
       const wrapper =
         configService.network.tokens.Addresses.yaPools?.[this.pool.value.id]
-          .wrappers[underlying];
+          .underlyingWrapperMap[underlying];
 
       if (!wrapper) {
         throw new Error(`Wrapper not found for token: ${address}`);
@@ -90,6 +82,7 @@ export class YaJoinHandler implements JoinPoolHandler {
         amount: eightyPercent,
         isWrap: true,
       });
+      wrapperAmountsIn.push({ wrapper: wrapper, amount: eightyPercent });
 
       evmAmountsIn.push(underlyingAmount.toString(), wrapperAmount.toString());
     }
@@ -128,6 +121,29 @@ export class YaJoinHandler implements JoinPoolHandler {
     if (!this.lastJoinRes) {
       throw new Error('Failed to fetch expected output.');
     }
+
+    const wrapCalls = wrapperAmountsIn.map(({ wrapper, amount }) => {
+      return Relayer.encodeWrapErc4626({
+        wrappedToken: wrapper,
+        sender: signerAddress,
+        recipient: signerAddress,
+        amount,
+        outputReference: 0,
+      });
+    });
+
+    if (relayerSignature) {
+      this.lastJoinRes.encodedCalls.splice(1, 0, ...wrapCalls);
+    } else {
+      this.lastJoinRes.encodedCalls.unshift(...wrapCalls);
+    }
+
+    this.lastJoinRes.encodedCall = balancerRelayerInterface.encodeFunctionData(
+      'multicall',
+      [this.lastJoinRes.encodedCalls]
+    );
+
+    console.log('encodedCalls', this.lastJoinRes?.encodedCalls);
 
     const bptOut = formatFixed(
       this.lastJoinRes.expectedOut,

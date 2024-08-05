@@ -12,10 +12,12 @@ import {
 import { ExactInExitHandler } from './handlers/exact-in-exit.handler';
 import { ExactOutExitHandler } from './handlers/exact-out-exit.handler';
 import { RecoveryExitHandler } from './handlers/recovery-exit.handler';
+import { YaExitHandler } from './handlers/ya-exit.handler';
 
 export enum ExitHandler {
   Swap = 'Swap',
   Generalised = 'Generalised',
+  YieldAccelerated = 'YieldAccelerated',
   ExactOut = 'ExactOut',
   ExactIn = 'ExactIn',
   Recovery = 'Recovery',
@@ -44,6 +46,7 @@ export class ExitPoolService {
     this.exitHandlerMap = {
       [ExitHandler.Swap]: new SwapExitHandler(pool, sdk),
       [ExitHandler.Generalised]: new GeneralisedExitHandler(pool, sdk),
+      [ExitHandler.YieldAccelerated]: new YaExitHandler(pool, sdk),
       [ExitHandler.ExactIn]: new ExactInExitHandler(pool, sdk),
       [ExitHandler.ExactOut]: new ExactOutExitHandler(pool, sdk),
       [ExitHandler.Recovery]: new RecoveryExitHandler(pool, sdk),
