@@ -250,6 +250,19 @@ export function orderedPoolTokens(
     const leafs = tokenTreeLeafs(tokens);
     const flatTokens = flatTokenTree(pool);
     return flatTokens.filter(token => includesAddress(leafs, token.address));
+  } else if (isYa(pool)) {
+    const underlying =
+      configService.network.tokens.Addresses.yaPools?.[pool.id]?.underlying;
+    const leafs = tokenTreeLeafs(tokens);
+    const flatTokens = flatTokenTree(pool);
+    const allTokens = flatTokens.filter(token =>
+      includesAddress(leafs, token.address)
+    );
+    if (!underlying) return allTokens;
+
+    return allTokens.filter(token =>
+      includesAddress(underlying, token.address)
+    );
   } else if (isComposableStable(pool.poolType) || isLinear(pool.poolType)) {
     return tokens.filter(token => !isSameAddress(token.address, pool.address));
   } else if (isStableLike(pool.poolType)) return tokens;
@@ -713,7 +726,15 @@ export function tokenWeight(pool: Pool, tokenAddress: string): number {
 export function joinTokens(pool: Pool): string[] {
   let addresses: string[] = [];
 
-  addresses = isDeep(pool) ? tokenTreeNodes(pool.tokens) : pool.tokensList;
+  if (isYa(pool)) {
+    return (
+      configService.network.tokens.Addresses.yaPools?.[pool.id]?.underlying ||
+      []
+    );
+  }
+
+  addresses =
+    isDeep(pool) || isYa(pool) ? tokenTreeNodes(pool.tokens) : pool.tokensList;
 
   return removeAddress(pool.address, addresses);
 }

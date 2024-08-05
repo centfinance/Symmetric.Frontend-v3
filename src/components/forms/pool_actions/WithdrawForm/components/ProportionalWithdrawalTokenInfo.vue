@@ -1,6 +1,11 @@
 <script setup lang="ts">
 import useNumbers, { FNumFormats } from '@/composables/useNumbers';
-import { isDeep, isLinear, isStableLike } from '@/composables/usePoolHelpers';
+import {
+  isDeep,
+  isYa,
+  isLinear,
+  isStableLike,
+} from '@/composables/usePoolHelpers';
 import { findByAddress } from '@/lib/utils';
 import { Pool, PoolToken } from '@/services/pool/types';
 import { TokenInfo } from '@/types/TokenList';
@@ -47,7 +52,8 @@ const poolToken = computed((): PoolToken | undefined => {
             v-if="
               !isStableLike(pool.poolType) &&
               !isDeep(pool) &&
-              !isLinear(pool.poolType)
+              !isLinear(pool.poolType) &&
+              !isYa(pool)
             "
           >
             {{

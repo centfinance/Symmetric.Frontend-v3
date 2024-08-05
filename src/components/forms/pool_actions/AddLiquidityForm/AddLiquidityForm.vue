@@ -227,7 +227,7 @@ watch(
     />
 
     <MissingPoolTokensAlert
-      v-if="!isSingleAssetJoin"
+      v-if="!isSingleAssetJoin && !isYaPool"
       :showSingleTokenSuggestion="isDeepPool && isPreMintedBptPool"
       :poolTokensWithBalance="joinTokensWithBalance"
       :poolTokensWithoutBalance="joinTokensWithoutBalance"

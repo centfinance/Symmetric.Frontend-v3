@@ -11,7 +11,7 @@ import { usePool } from '@/providers/local/pool.provider';
  * COMPOSABLES
  */
 const { pool, isLoadingPool, refetchOnchainPoolData } = usePool();
-const { isDeepPool } = usePoolHelpers(pool);
+const { isDeepPool, isYaPool } = usePoolHelpers(pool);
 const { balanceQueryLoading } = useTokens();
 
 // Instead of refetching pool data on every block, we refetch every 20s to prevent
@@ -23,7 +23,8 @@ useIntervalFn(refetchOnchainPoolData, oneSecondInMs * 20);
  */
 // We only need to wait for SOR if it's a deep pool.
 const isLoadingSor = computed(
-  (): boolean => isDeepPool.value && !hasFetchedPoolsForSor.value
+  (): boolean =>
+    (isDeepPool.value || isYaPool.value) && !hasFetchedPoolsForSor.value
 );
 
 const isLoading = computed(

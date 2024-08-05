@@ -11,6 +11,7 @@ import {
   isSwappingHaltable,
   isWeightedLike,
   isDeep,
+  isYa,
   isComposableStableLike,
   isComposableStable,
 } from '@/composables/usePoolHelpers';
@@ -93,7 +94,7 @@ export default class Vault {
         }
       }
 
-      if (isDeep(pool)) {
+      if (isDeep(pool) || isYa(pool)) {
         Object.keys(tokens).forEach((token, i) => {
           poolMulticaller.call(`linearPools.${token}.id`, token, 'getPoolId');
           poolMulticaller.call(

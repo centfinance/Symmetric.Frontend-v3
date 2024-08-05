@@ -8,6 +8,7 @@ import {
 import { useTokens } from '@/providers/tokens.provider';
 import { bnum, isSameAddress } from '@/lib/utils';
 import { Pool } from '@/services/pool/types';
+import { configService } from '@/services/config/config.service';
 
 // Components
 import AssetRow from './components/AssetRow.vue';
@@ -35,7 +36,7 @@ const emit = defineEmits<{
 /**
  * COMPOSABLES
  */
-const { isWrappedNativeAssetPool, isDeepPool } = usePoolHelpers(
+const { isWrappedNativeAssetPool, isDeepPool, isYaPool } = usePoolHelpers(
   toRef(props, 'pool')
 );
 const { balanceFor, nativeAsset, wrappedNativeAsset } = useTokens();
@@ -48,6 +49,12 @@ const route = useRoute();
 const pageContext = computed(() => route.name);
 
 const tokenAddresses = computed((): string[] => {
+  if (isYaPool.value) {
+    const underlying =
+      configService.network.tokens.Addresses.yaPools?.[props.pool.id]
+        ?.underlying;
+    return underlying ? underlying : [];
+  }
   if (isDeepPool.value) {
     return props.pool.mainTokens || [];
   }

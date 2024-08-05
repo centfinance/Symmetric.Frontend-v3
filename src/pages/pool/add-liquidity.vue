@@ -25,7 +25,7 @@ providePoolStaking(poolId);
  * COMPOSABLES
  */
 const { pool, isLoadingPool, refetchOnchainPoolData } = usePool();
-const { isDeepPool } = usePoolHelpers(pool);
+const { isDeepPool, isYaPool } = usePoolHelpers(pool);
 const { isMobile } = useBreakpoints();
 
 /**
@@ -33,7 +33,8 @@ const { isMobile } = useBreakpoints();
  */
 // We only need to wait for SOR if it's a deep pool.
 const isLoadingSor = computed(
-  (): boolean => isDeepPool.value && !hasFetchedPoolsForSor.value
+  (): boolean =>
+    (isDeepPool.value || isYaPool.value) && !hasFetchedPoolsForSor.value
 );
 
 const isLoading = computed(

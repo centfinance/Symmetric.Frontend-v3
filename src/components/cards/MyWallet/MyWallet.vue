@@ -39,9 +39,8 @@ const { t } = useI18n();
 const { isWalletReady, startConnectWithInjectedProvider } = useWeb3();
 const { upToLargeBreakpoint } = useBreakpoints();
 const { setTokenInAddress } = useSwapState();
-const { isDeepPool, isPreMintedBptPool, poolJoinTokens } = usePoolHelpers(
-  toRef(props, 'pool')
-);
+const { isDeepPool, isYaPool, isPreMintedBptPool, poolJoinTokens } =
+  usePoolHelpers(toRef(props, 'pool'));
 
 const {
   isLoadingBalances,
@@ -120,7 +119,7 @@ const emit = defineEmits<{
         <div v-else-if="isWalletReady">
           <template v-if="pool">
             <MyWalletSubheader
-              v-if="isDeepPool"
+              v-if="isDeepPool || isYaPool"
               class="text-sm border-b text-secondary"
             >
               {{ t('myWalletCard.title.poolTokens') }}

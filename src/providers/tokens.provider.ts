@@ -386,6 +386,7 @@ export const tokensProvider = (
     amountsToApprove: AmountToApprove[],
     spender: string
   ): AmountToApprove[] {
+    console.log('amountsToApprove', amountsToApprove);
     return amountsToApprove.filter(({ address, amount }) => {
       if (!spender) return false;
 

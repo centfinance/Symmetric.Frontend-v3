@@ -204,10 +204,12 @@ export const joinPoolProvider = (
 
   const amountsToApprove = computed(() => {
     if (isYaPool.value) {
+      console.log('yaPool');
+      console.log('amountsIn:', amountsIn.value);
       return amountsIn.value.flatMap(amountIn => {
         const wrapper =
           configService.network.tokens.Addresses.yaPools?.[pool.value.id]
-            .wrappers[amountIn.address];
+            .underlyingWrapperMap[amountIn.address];
         if (!wrapper) {
           throw new Error(`Wrapper not found for token: ${amountIn.address}`);
         }
@@ -307,6 +309,7 @@ export const joinPoolProvider = (
 
   // Updates the approval actions like relayer approval and token approvals.
   async function setApprovalActions() {
+    console.log('amountsToApprove:', amountsToApprove.value);
     const tokenApprovalActions = await getTokenApprovalActions({
       amountsToApprove: amountsToApprove.value,
       spender: appNetworkConfig.addresses.vault,
