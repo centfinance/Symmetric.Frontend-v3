@@ -22,6 +22,8 @@ function getFeatureClasses() {
   switch (props.feature) {
     case PoolFeature.Boosted:
       return 'bg-gradient-to-tr from-yellow-500 to-pink-500 text-white';
+    case PoolFeature.YieldAccelerated:
+      return 'bg-gradient-to-tr from-purple-500 to-pink-500 text-white';
     case PoolFeature.CLP:
       return 'bg-gradient-to-tr from-pink-300 to-yellow-200 text-black';
     default:
@@ -33,6 +35,8 @@ function getFeatureLabel(): string {
   switch (props.feature) {
     case PoolFeature.Boosted:
       return t('boosted');
+    case PoolFeature.YieldAccelerated:
+      return t('yieldAccelerated');
     case PoolFeature.CLP:
       return 'CLP';
     default:

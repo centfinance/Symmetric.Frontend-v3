@@ -1,4 +1,6 @@
 import { Pools } from '@/types/pools';
+import { PoolFeature } from '@/types/pools';
+import { Protocol } from '@/composables/useProtocols';
 
 const pools: Pools = {
   IdsMap: {
@@ -30,9 +32,9 @@ const pools: Pools = {
     '0x263639ba4b362de2673b482af2a8661f4d8fd610000000000000000000000025', // myaUSDM
     '0x934e800ea1ce2f04e1bd75028928404379d8f3f2000000000000000000000023', // myaUSDC
     '0xf6a33fd1086bae6fa913f5354fa1e15207361ac2000000000000000000000024', // myaUSDT
-    // '0x71fd3b5e53e444ed1e8309b578cffd7d33294c59000000000000000000000026', // myaUSDC v3
-    // '0xc8994727bf84b432a9955403e4335a874c1ae919000000000000000000000027', // myaUSDT v3
-    // '0x542a31176829f9dda137942c7cabbb4533523ad3000000000000000000000028', // myaUSDM v3
+    '0x71fd3b5e53e444ed1e8309b578cffd7d33294c59000000000000000000000026', // myaUSDC v3
+    '0xc8994727bf84b432a9955403e4335a874c1ae919000000000000000000000027', // myaUSDT v3
+    '0x542a31176829f9dda137942c7cabbb4533523ad3000000000000000000000028', // myaUSDM v3
     // '0xf0333afa20b852776911edb986061cef1376b4fe00000000000000000000002a', // myaUSD
   ],
   IncludedPoolTypes: [
@@ -52,9 +54,6 @@ const pools: Pools = {
       '0x5e99843486cf052baf0925a0cdeb40920477295900000000000000000000000b',
       // '0xd757973e91a8045808e8cd37cc2b7df128e7ca2c00000000000000000000000d',
       '0x412b37b8074e25683fdd4f5b2ac0218647dcc50e00000000000000000000001a', //wUSK-USDC
-      '0x71fd3b5e53e444ed1e8309b578cffd7d33294c59000000000000000000000026', // myaUSDC v3
-      '0xc8994727bf84b432a9955403e4335a874c1ae919000000000000000000000027', // myaUSDT v3
-      '0x542a31176829f9dda137942c7cabbb4533523ad3000000000000000000000028', // myaUSDM v3
       '0xf0333afa20b852776911edb986061cef1376b4fe00000000000000000000002a', // myaUSD
     ],
   },
@@ -126,6 +125,15 @@ const pools: Pools = {
     '0x6fbfcf88db1aada31f34215b2a1df7fafb4883e900000000000000000000000d': {
       name: 'Burn tSYMM emissions',
       hasIcon: false,
+    },
+    '0xf0333afa20b852776911edb986061cef1376b4fe00000000000000000000002a': {
+      name: 'Meridian Yield Accelerated USD',
+      hasIcon: false,
+      features: {
+        [PoolFeature.YieldAccelerated]: {
+          featureProtocols: [Protocol.Meridian],
+        },
+      },
     },
   },
   Deep: [

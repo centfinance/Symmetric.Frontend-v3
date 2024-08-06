@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import {
   isLiquidityBootstrapping,
+  isYa,
   isBoosted,
   protocolsFor,
   isGyro,
@@ -26,6 +27,20 @@ defineProps<Props>();
         <PoolFeatureChip
           :feature="PoolFeature.Boosted"
           :protocols="protocolsFor(pool, PoolFeature.Boosted)"
+          class="ml-1"
+        />
+      </template>
+    </BalTooltip>
+
+    <BalTooltip
+      v-if="isYa(pool)"
+      :text="$t('yieldAcceleratedTooltip')"
+      width="56"
+    >
+      <template #activator>
+        <PoolFeatureChip
+          :feature="PoolFeature.YieldAccelerated"
+          :protocols="protocolsFor(pool, PoolFeature.YieldAccelerated)"
           class="ml-1"
         />
       </template>

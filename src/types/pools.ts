@@ -37,6 +37,7 @@ export type FactoryType =
   | 'erc4626Linear';
 
 export enum PoolFeature {
+  YieldAccelerated = 'yieldAccelerated',
   Boosted = 'boosted',
   CLP = 'clp',
 }

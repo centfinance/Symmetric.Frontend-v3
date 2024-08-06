@@ -8,10 +8,6 @@ import { convertStEthWrap } from './lido';
 import { TransactionBuilder } from '@/services/web3/transactions/transaction.builder';
 import { WalletProvider } from '@/dependencies/wallets/Web3Provider';
 import { convertERC4626Wrap } from './erc4626Wrappers';
-import { BatchRelayerService } from '@/services/balancer/batch-relayer/batch-relayer.service';
-import BatchRelayerAbi from '@/services/balancer/batch-relayer/abi/BatchRelayer.json';
-import { Interface } from '@ethersproject/abi';
-import { VaultActionsService } from '@/services/balancer/batch-relayer/extensions/vault-actions.service';
 
 export enum WrapType {
   NonWrap = 0,
@@ -94,9 +90,9 @@ export const getWrapAction = (tokenIn: string, tokenOut: string): WrapType => {
   )
     return WrapType.Unwrap;
 
-  if (isYaPoolWrap(tokenIn, tokenOut)) return WrapType.Wrap;
+  // if (isYaPoolWrap(tokenIn, tokenOut)) return WrapType.Wrap;
 
-  if (isYaPoolUnwrap(tokenIn, tokenOut)) return WrapType.Unwrap;
+  // if (isYaPoolUnwrap(tokenIn, tokenOut)) return WrapType.Unwrap;
 
   return WrapType.NonWrap;
 };
@@ -144,6 +140,7 @@ export async function wrap(
   wrapper: string,
   amount: BigNumber
 ): Promise<TransactionResponse> {
+  console.log('wrap', wrapper, amount.toString());
   try {
     if (wrapper === configs[network].tokens.Addresses.wNativeAsset) {
       return wrapNative(network, web3, amount);
@@ -156,21 +153,6 @@ export async function wrap(
       )
     ) {
       return wrapERC4626(network, web3, wrapper.toLowerCase(), amount);
-    } else if (
-      configs[network].tokens.Addresses.yaNestedPools &&
-      Object.keys(configs[network].tokens.Addresses.yaNestedPools).includes(
-        wrapper.toLowerCase()
-      )
-    ) {
-      const yaPool =
-        configs[network].tokens.Addresses.yaNestedPools[wrapper.toLowerCase()];
-      return wrapYaPool(
-        web3,
-        yaPool.underlying,
-        yaPool.wrapper,
-        yaPool.poolId,
-        amount
-      );
     }
     throw new Error('Unrecognised wrapper contract');
   } catch (e) {
@@ -294,56 +276,5 @@ const unwrapERC4626 = async (
     ],
     action: 'redeem',
     params: [amount, userAddress, userAddress],
-  });
-};
-
-const wrapYaPool = async (
-  web3: WalletProvider,
-  underlying: string,
-  wrapper: string,
-  poolId: string,
-  amount: BigNumber
-): Promise<TransactionResponse> => {
-  const batchRelayerService = new BatchRelayerService();
-  const batchRelayerInterface = new Interface(BatchRelayerAbi);
-  const txBuilder = new TransactionBuilder(web3.getSigner());
-  const userAddress = await web3.getSigner().getAddress();
-
-  const wrapperAmount = await getWrapOutput(
-    wrapper,
-    WrapType.Wrap,
-    amount.div(2)
-  );
-
-  const wrapCall = batchRelayerService.erc4626EncodeWrap({
-    wrappedToken: wrapper,
-    sender: userAddress,
-    recipient: userAddress,
-    amount: amount.div(2),
-    outputReference: BigNumber.from(0),
-  });
-
-  const vaultActionsService = new VaultActionsService();
-
-  const joinPoolCall = vaultActionsService.encodeJoinPool({
-    poolId,
-    poolKind: 2,
-    sender: userAddress,
-    recipient: userAddress,
-    joinPoolRequest: {
-      assets: [underlying, wrapper],
-      maxAmountsIn: [amount.div(2), wrapperAmount],
-      userData: '0x',
-      fromInternalBalance: false,
-    },
-    value: BigNumber.from(0),
-    outputReference: BigNumber.from(1),
-  });
-
-  return await txBuilder.raw.sendTransaction({
-    to: configService.network.addresses.batchRelayer,
-    data: batchRelayerInterface.encodeFunctionData('multicall', [
-      [wrapCall, joinPoolCall],
-    ]),
   });
 };
