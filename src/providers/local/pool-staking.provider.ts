@@ -81,6 +81,12 @@ export const poolStakingProvider = (_poolId?: string) => {
       )
   );
 
+  const gaugeTotalSupply = computed((): string => {
+    return poolGauges.value?.liquidityGauges?.[0]?.totalSupply || '0';
+  });
+
+  console.log('gaugeTotalSupply', gaugeTotalSupply.value);
+
   // User's staked shares for pool (onchain data).
   const stakedShares = computed((): string => {
     if (!poolId.value) return '0';
@@ -237,6 +243,7 @@ export const poolStakingProvider = (_poolId?: string) => {
     refetchStakedShares,
     preferentialGaugeAddress,
     fetchPreferentialGaugeAddress,
+    gaugeTotalSupply,
     setCurrentPool,
     refetchAllPoolStakingData,
     stake,

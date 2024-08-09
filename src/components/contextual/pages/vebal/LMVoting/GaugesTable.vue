@@ -37,7 +37,7 @@ import { Protocol } from '@/composables/useProtocols';
 import { isVotingTimeLocked } from '@/composables/useVeBAL';
 import { useVoting } from '@/components/contextual/pages/vebal/providers/voting.provider';
 import {
-  hasUserVotes,
+  // hasUserVotes,
   isGaugeNew,
 } from '@/components/contextual/pages/vebal/voting-utils';
 
@@ -334,9 +334,8 @@ function getPickedTokens(tokens: VotingPool['tokens']) {
           noMargin
           :modelValue="isSelected(pool)"
           :disabled="
-            hasUserVotes(pool) ||
-            isVotingTimeLocked(pool.lastUserVoteTime) ||
-            selectVotesDisabled
+            // hasUserVotes(pool) ||
+            isVotingTimeLocked(pool.lastUserVoteTime) || selectVotesDisabled
           "
           @click.stop
           @input="toggleSelection(pool)"
@@ -351,3 +350,7 @@ tr.expired-gauge-row {
   @apply bg-red-50  hover:bg-red-100 dark:border-red-600 dark:border;
 }
 </style>
+
+
+356134000
+356063440

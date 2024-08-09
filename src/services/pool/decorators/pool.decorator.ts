@@ -66,6 +66,14 @@ export class PoolDecorator {
       poolMulticaller.fetch(),
     ]);
 
+    let rewards;
+    if (configService.network.chainId === 40) {
+      const request = await fetch(
+        'https://rewards.symmetric.workers.dev/rewards/telos'
+      );
+      rewards = await request.json();
+    }
+    console.log(rewards);
     const promises = processedPools.map(async pool => {
       const poolService = new this.poolServiceClass(pool);
 
@@ -78,7 +86,10 @@ export class PoolDecorator {
         poolService.setFeesSnapshot(poolSnapshot);
         poolService.setVolumeSnapshot(poolSnapshot);
         await poolService.setTotalLiquidity();
-        await poolService.setAPR();
+
+        rewards
+          ? await poolService.setAPR(rewards)
+          : await poolService.setAPR();
       }
 
       return poolService.pool;

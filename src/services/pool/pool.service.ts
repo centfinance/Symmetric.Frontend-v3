@@ -66,7 +66,7 @@ export default class PoolService {
   /**
    * @summary Calculates APRs for pool.
    */
-  public async setAPR(): Promise<AprBreakdown> {
+  public async setAPR(r?: any): Promise<AprBreakdown> {
     let apr: any = this.pool.apr;
     const breakdown = {} as AprBreakdown;
     try {
@@ -93,13 +93,13 @@ export default class PoolService {
       };
     }
     // has local rewards
-    const timestamp = roundDownTimestamp(Date.now() / 1000);
-    const rewards = useNetwork().networkConfig.rewards;
-    if (rewards && rewards[timestamp] && rewards[timestamp][this.pool.id]) {
+    // const timestamp = roundDownTimestamp(Date.now() / 1000);
+    // const rewards = useNetwork().networkConfig.rewards;
+    if (r && r[this.pool.id]) {
       // Get gauge
       const totalSupply = await gaugeTotalSupply(this.pool.address);
       const totalSupplyUsd = Number(this.bptPrice) * totalSupply;
-      const poolRewards = rewards[timestamp][this.pool.id];
+      const poolRewards = r[this.pool.id];
 
       poolRewards.forEach(reward => {
         console.log(reward);
@@ -212,11 +212,11 @@ const gaugeTotalSupply = async (poolAddress: string): Promise<number> => {
   }
 };
 
-function roundDownTimestamp(timestamp: number): number {
-  const date = new Date(timestamp * 1000); // Convert Unix timestamp to milliseconds
-  const day = date.getUTCDay(); // Get the day of the week (0 - Sunday, 1 - Monday, ..., 6 - Saturday)
-  const daysToThursday = (day + 7 - 4) % 7; // Calculate the number of days to Thursday (4 - Thursday)
-  date.setUTCDate(date.getUTCDate() - daysToThursday); // Subtract the number of days to Thursday
-  date.setUTCHours(0, 0, 0, 0); // Set the time to midnight (00:00:00)
-  return Math.floor(date.getTime() / 1000); // Convert back to Unix timestamp in seconds
-}
+// function roundDownTimestamp(timestamp: number): number {
+//   const date = new Date(timestamp * 1000); // Convert Unix timestamp to milliseconds
+//   const day = date.getUTCDay(); // Get the day of the week (0 - Sunday, 1 - Monday, ..., 6 - Saturday)
+//   const daysToThursday = (day + 7 - 4) % 7; // Calculate the number of days to Thursday (4 - Thursday)
+//   date.setUTCDate(date.getUTCDate() - daysToThursday); // Subtract the number of days to Thursday
+//   date.setUTCHours(0, 0, 0, 0); // Set the time to midnight (00:00:00)
+//   return Math.floor(date.getTime() / 1000); // Convert back to Unix timestamp in seconds
+// }
