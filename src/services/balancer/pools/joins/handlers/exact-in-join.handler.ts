@@ -1,5 +1,5 @@
 import { Pool } from '@/services/pool/types';
-import { BalancerSDK, PoolWithMethods } from '@symmetric-v3/sdk';
+import { BalancerSDK, Pools, PoolWithMethods } from '@symmetric-v3/sdk';
 import { TransactionResponse } from '@ethersproject/abstract-provider';
 import { Ref } from 'vue';
 import { JoinParams, JoinPoolHandler, QueryOutput } from './join-pool.handler';
@@ -15,6 +15,7 @@ import {
 import { TransactionBuilder } from '@/services/web3/transactions/transaction.builder';
 import { tokensListExclBpt } from '@/composables/usePoolHelpers';
 import { configService } from '@/services/config/config.service';
+import { getBalancerSDK } from '@/dependencies/balancer-sdk';
 
 export type ExactInJoinResponse = ReturnType<PoolWithMethods['buildJoin']>;
 /**
@@ -61,7 +62,13 @@ export class ExactInJoinHandler implements JoinPoolHandler {
 
     const signerAddress = await signer.getAddress();
     const slippage = slippageBsp.toString();
-    const sdkPool = await this.sdk.pools.find(this.pool.value.id);
+    // const sdkPool = await this.sdk.pools.find(this.pool.value.id);
+    const sdkConfig = getBalancerSDK().networkConfig;
+    const pool = await getBalancerSDK().data.poolsOnChain.find(
+      this.pool.value.id
+    );
+    if (!pool) throw new Error('Failed to find pool: ' + this.pool.value.id);
+    const sdkPool = Pools.wrap(pool, sdkConfig);
 
     if (!sdkPool) throw new Error('Failed to find pool: ' + this.pool.value.id);
     const _tokensIn = tokensList.map(address => formatAddressForSor(address));
