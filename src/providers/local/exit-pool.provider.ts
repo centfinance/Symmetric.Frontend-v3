@@ -10,10 +10,12 @@ import {
   isYa,
   tokenTreeLeafs,
   tokenTreeNodes,
+  usePoolHelpers,
 } from '@/composables/usePoolHelpers';
 import useRelayerApproval, {
   RelayerType,
 } from '@/composables/approvals/useRelayerApproval';
+import useTokenApprovalActions from '@/composables/approvals/useTokenApprovalActions';
 import { useTokens } from '@/providers/tokens.provider';
 import { useTxState } from '@/composables/useTxState';
 import { useUserSettings } from '@/providers/user-settings.provider';
@@ -48,6 +50,9 @@ import { safeInject } from '../inject';
 import { useApp } from '@/composables/useApp';
 import { POOLS } from '@/constants/pools';
 import { captureBalancerException } from '@/lib/utils/errors';
+import { configService } from '@/services/config/config.service';
+import { ApprovalAction } from '@/composables/approvals/types';
+import { MaxUint256 } from '@ethersproject/constants';
 
 /**
  * TYPES
@@ -102,9 +107,11 @@ export const exitPoolProvider = (
   const { txState, txInProgress } = useTxState();
   const { transactionDeadline } = useApp();
   const { slippageBsp } = useUserSettings();
-  const { account, getSigner } = useWeb3();
+  const { account, getSigner, appNetworkConfig } = useWeb3();
+  const { poolJoinTokens } = usePoolHelpers(pool);
   const { relayerSignature, relayerApprovalAction, relayerApprovalTx } =
     useRelayerApproval(RelayerType.BATCH);
+  const { getTokenApprovalActions } = useTokenApprovalActions();
 
   const debounceQueryExit = debounce(queryExit, debounceQueryExitMillis);
   const debounceGetSingleAssetMax = debounce(
@@ -184,9 +191,45 @@ export const exitPoolProvider = (
       !(relayerApprovalTx.isUnlocked.value || relayerSignature.value)
   );
 
-  const approvalActions = computed((): TransactionActionInfo[] =>
-    shouldSignRelayer.value ? [relayerApprovalAction.value] : []
-  );
+  const isYaPool = computed((): boolean => isYa(pool.value));
+
+  const amountsToApprove = computed(() => {
+    if (isSingleAssetExit.value) {
+      return [];
+    }
+    if (isYaPool.value) {
+      const yaPool =
+        configService.network.tokens.Addresses.yaPools?.[pool.value.id];
+      if (yaPool && yaPool.wrappers) {
+        const approvals = yaPool.wrappers.map(wrapper => {
+          return {
+            address: wrapper,
+            amount: MaxUint256.toString(),
+            spender: appNetworkConfig.addresses.vault,
+          };
+        });
+        return approvals;
+      }
+    }
+    return [];
+  });
+
+  const approvalActions = ref<TransactionActionInfo[]>([]);
+
+  // Updates the approval actions like relayer approval and token approvals.
+  async function setApprovalActions() {
+    console.log('amountsToApprove:', amountsToApprove.value);
+    const tokenApprovalActions = await getTokenApprovalActions({
+      amountsToApprove: amountsToApprove.value,
+      spender: appNetworkConfig.addresses.vault,
+      actionType: ApprovalAction.Unwrapping,
+      skipAllowanceCheck: true, // Done once beforeMount
+    });
+
+    approvalActions.value = shouldSignRelayer.value
+      ? [relayerApprovalAction.value, ...tokenApprovalActions]
+      : tokenApprovalActions;
+  }
 
   const canSwapExit = computed(
     (): boolean => isDeep(pool.value) && isPreMintedBptType(pool.value.poolType)
@@ -378,9 +421,9 @@ export const exitPoolProvider = (
 
     exitPoolService.setExitHandler(exitHandlerType.value);
 
-    console.log('exitHandler:', exitHandlerType.value);
     try {
-      await nextTick();
+      await setApprovalActions();
+
       const output = await exitPoolService.queryExit({
         exitType: exitType.value,
         bptIn: _bptIn.value,
@@ -429,7 +472,6 @@ export const exitPoolProvider = (
 
     exitPoolService.setExitHandler(singleAssetMaxedExitHandler);
 
-    console.log('exitHandler:', exitHandlerType.value);
     try {
       await nextTick();
       const output = await exitPoolService.queryExit({
@@ -463,8 +505,8 @@ export const exitPoolProvider = (
     try {
       txError.value = '';
       exitPoolService.setExitHandler(exitHandlerType.value);
+      await setApprovalActions();
 
-      console.log('exitHandler:', exitHandlerType.value);
       return exitPoolService.exit({
         exitType: exitType.value,
         bptIn: _bptIn.value,
@@ -486,11 +528,15 @@ export const exitPoolProvider = (
   }
 
   function setInitialPropAmountsOut() {
-    const leafNodes: string[] = isDeepPool.value
+    let leafNodes: string[] = isDeepPool.value
       ? tokenTreeLeafs(pool.value.tokens)
       : pool.value.tokensList.filter(
           token => !isSameAddress(token, pool.value.address)
         );
+
+    if (isYa(pool.value)) {
+      leafNodes = poolJoinTokens.value.sort((a, b) => a.localeCompare(b));
+    }
 
     propAmountsOut.value = leafNodes.map(address => ({
       address,
@@ -552,6 +598,8 @@ export const exitPoolProvider = (
       setInitialPropAmountsOut();
     }
   });
+
+  watch(relayerApprovalAction, async () => await setApprovalActions());
 
   /**
    * LIFECYCLE

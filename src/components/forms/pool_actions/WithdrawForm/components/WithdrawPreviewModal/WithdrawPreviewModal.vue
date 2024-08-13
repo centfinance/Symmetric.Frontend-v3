@@ -90,9 +90,11 @@ const fiatAmountInMap = computed((): AmountMap => {
 
 const tokenOutMap = computed((): TokenInfoMap => {
   const tokenMap = {};
+  console.log('amountsOut', amountsOut.value);
   amountsOut.value.forEach(item => {
     tokenMap[item.address] = getToken(item.address);
   });
+  console.log('tokenOutMap', tokenMap);
   return tokenMap;
 });
 

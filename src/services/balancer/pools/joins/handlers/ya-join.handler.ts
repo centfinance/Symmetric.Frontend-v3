@@ -13,7 +13,10 @@ import { bnum, isSameAddress, selectByAddress } from '@/lib/utils';
 import { TransactionBuilder } from '@/services/web3/transactions/transaction.builder';
 import { configService } from '@/services/config/config.service';
 import { AddressZero } from '@ethersproject/constants';
-import { convertERC4626Wrap } from '@/lib/utils/balancer/erc4626Wrappers';
+import {
+  convertERC4626Wrap,
+  convertYieldWrap,
+} from '@/lib/utils/balancer/erc4626Wrappers';
 import { BigNumber } from '@ethersproject/bignumber';
 
 type JoinResponse = Awaited<
@@ -52,11 +55,11 @@ export class YaJoinHandler implements JoinPoolHandler {
     signer,
     slippageBsp,
     relayerSignature,
-    approvalActions,
   }: JoinParams): Promise<QueryOutput> {
     const evmAmountsIn: string[] = [];
     const tokenAddresses: string[] = [];
     const wrapperAmountsIn: { wrapper: string; amount: BigNumber }[] = [];
+    const signerAddress = await signer.getAddress();
 
     for (const { address, value } of amountsIn) {
       const token = selectByAddress(tokensIn, address);
@@ -73,38 +76,29 @@ export class YaJoinHandler implements JoinPoolHandler {
         throw new Error(`Wrapper not found for token: ${address}`);
       }
 
-      tokenAddresses.push(underlying, this.formatTokenAddress(wrapper));
+      tokenAddresses.push(address, this.formatTokenAddress(wrapper));
 
       const parsedValue = parseFixed(value || '0', token.decimals);
       const underlyingAmount = parsedValue.mul(20).div(100);
       const eightyPercent = parsedValue.mul(80).div(100);
+
+      await convertYieldWrap(wrapper, signerAddress, {
+        amount: eightyPercent,
+        isWrap: true,
+      });
+
       const wrapperAmount = await convertERC4626Wrap(wrapper, {
         amount: eightyPercent,
         isWrap: true,
       });
+      console.log('wrapperAmount', wrapperAmount.toString());
       wrapperAmountsIn.push({ wrapper: wrapper, amount: eightyPercent });
 
       evmAmountsIn.push(underlyingAmount.toString(), wrapperAmount.toString());
     }
 
-    const signerAddress = await signer.getAddress();
     const slippage = slippageBsp.toString();
     const poolId = this.pool.value.id;
-    const hasInvalidAmounts = amountsIn.some(item => !item.valid);
-
-    const isNativeAssetJoin = amountsIn.some(item =>
-      isSameAddress(item.address, configService.network.nativeAsset.address)
-    );
-
-    // Static call simulation is more accurate than VaultModel, but requires relayer approval,
-    // token approvals, and account to have enought token balance.
-    const simulationType = this.getSimulationType({
-      isNativeAssetJoin,
-      hasInvalidAmounts,
-      approvalActionsLength: approvalActions.length,
-    });
-
-    console.log({ simulationType });
 
     this.lastJoinRes = await this.sdk.pools.generalisedJoin(
       poolId,
@@ -113,7 +107,7 @@ export class YaJoinHandler implements JoinPoolHandler {
       signerAddress,
       slippage,
       signer,
-      simulationType,
+      SimulationType.VaultModel,
       relayerSignature
     );
     console.log('lastJoinRes', this.lastJoinRes);
@@ -122,13 +116,13 @@ export class YaJoinHandler implements JoinPoolHandler {
       throw new Error('Failed to fetch expected output.');
     }
 
-    const wrapCalls = wrapperAmountsIn.map(({ wrapper, amount }) => {
+    const wrapCalls = wrapperAmountsIn.map(({ wrapper, amount }, i) => {
       return Relayer.encodeWrapErc4626({
         wrappedToken: wrapper,
         sender: signerAddress,
         recipient: signerAddress,
         amount,
-        outputReference: 0,
+        outputReference: i,
       });
     });
 
@@ -160,23 +154,23 @@ export class YaJoinHandler implements JoinPoolHandler {
     };
   }
 
-  private getSimulationType({
-    isNativeAssetJoin,
-    hasInvalidAmounts,
-    approvalActionsLength,
-  }: {
-    isNativeAssetJoin: boolean;
-    hasInvalidAmounts: boolean;
-    approvalActionsLength: number;
-  }): SimulationType {
-    if (isNativeAssetJoin) {
-      return SimulationType.VaultModel;
-    }
-    if (!hasInvalidAmounts && !approvalActionsLength) {
-      return SimulationType.Static;
-    }
-    return SimulationType.VaultModel;
-  }
+  // private getSimulationType({
+  //   isNativeAssetJoin,
+  //   hasInvalidAmounts,
+  //   approvalActionsLength,
+  // }:
+  //   isNativeAssetJoin: boolean;
+  //   hasInvalidAmounts: boolean;
+  //   approvalActionsLength: number;
+  // }): SimulationType {
+  //   if (isNativeAssetJoin) {
+  //     return SimulationType.VaultModel;
+  //   }
+  //   // if (!hasInvalidAmounts && !approvalActionsLength) {
+  //   //   return SimulationType.Static;
+  //   // }
+  //   return SimulationType.VaultModel;
+  // }
 
   /**
    * If native asset addres, replaces with zero address because the vault only checks

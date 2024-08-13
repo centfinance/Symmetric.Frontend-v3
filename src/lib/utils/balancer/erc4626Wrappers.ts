@@ -3,6 +3,7 @@ import { BigNumber } from '@ethersproject/bignumber';
 import { WeiPerEther as ONE } from '@ethersproject/constants';
 import { configService } from '@/services/config/config.service';
 import { rpcProviderService } from '@/services/rpc-provider/rpc-provider.service';
+import { walletService } from '@/services/web3/wallet.service';
 
 const { erc4626Wrappers } = configService.network.tokens.Addresses;
 
@@ -87,6 +88,33 @@ export async function convertERC4626Wrap(
     const rate = await rateProvider.getRate();
 
     return isWrap ? amount.mul(ONE).div(rate) : amount.mul(rate).div(ONE);
+  } catch (error) {
+    throw new Error('Failed to convert to ERC4626 wrapper', { cause: error });
+  }
+}
+
+export async function convertYieldWrap(
+  wrapper: string,
+  userAddress: string,
+  { amount }: ConversionParams
+) {
+  try {
+    // const provider = getSigner();
+    const shares = await walletService.txBuilder.contract.callStatic<BigNumber>(
+      {
+        contractAddress: wrapper,
+        abi: [
+          'event Deposit(address indexed caller, address indexed owner, uint256 assets, uint256 shares)',
+          'function deposit(uint256 assets, address receiver) returns (uint256 shares)',
+        ],
+        action: 'deposit',
+        params: [amount, userAddress],
+      }
+    );
+
+    console.log('shares', shares.toString());
+
+    // return isWrap ? amount.mul(ONE).div(rate) : amount.mul(rate).div(ONE);
   } catch (error) {
     throw new Error('Failed to convert to ERC4626 wrapper', { cause: error });
   }

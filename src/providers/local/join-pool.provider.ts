@@ -204,8 +204,6 @@ export const joinPoolProvider = (
 
   const amountsToApprove = computed(() => {
     if (isYaPool.value) {
-      console.log('yaPool');
-      console.log('amountsIn:', amountsIn.value);
       return amountsIn.value.flatMap(amountIn => {
         const wrapper =
           configService.network.tokens.Addresses.yaPools?.[pool.value.id]

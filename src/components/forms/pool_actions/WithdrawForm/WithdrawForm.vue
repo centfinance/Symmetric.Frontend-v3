@@ -42,6 +42,9 @@ const router = useRouter();
 const { networkSlug } = useNetwork();
 const { isWalletReady, startConnectWithInjectedProvider, isMismatchedNetwork } =
   useWeb3();
+
+const { poolJoinTokens, isYaPool } = usePoolHelpers(pool);
+
 const {
   isSingleAssetExit,
   singleAmountOut,
@@ -72,12 +75,18 @@ const hasValidInputs = computed(
   (): boolean => validAmounts.value && hasAcceptedHighPriceImpact.value
 );
 
-const tokensList = computed(() => tokensListExclBpt(pool.value));
+const tokensList = computed(() =>
+  isYaPool.value ? poolJoinTokens.value : tokensListExclBpt(pool.value)
+);
 
 // Limit token select modal to a subset.
 const subsetTokens = computed((): string[] => {
-  // Returning an empty array means all tokens are presented in the modal.
-  if (!shouldUseRecoveryExit.value && canSwapExit.value) return [];
+  if (isYaPool.value) {
+    return poolJoinTokens.value;
+  }
+  if (!shouldUseRecoveryExit.value && canSwapExit.value)
+    // Returning an empty array means all tokens are presented in the modal.
+    return [];
 
   if (isWrappedNativeAssetPool.value)
     return [nativeAsset.address, ...tokensList.value];

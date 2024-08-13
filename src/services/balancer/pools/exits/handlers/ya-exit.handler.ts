@@ -44,8 +44,9 @@ export class YaExitHandler implements ExitPoolHandler {
   ) {}
 
   async exit(params: ExitParams): Promise<TransactionResponse> {
+    console.log('exit params', params);
     await this.queryExit(params);
-
+    console.log('exitTx', this.exitTx);
     if (!this.exitTx) {
       throw new Error('Could not query generalised exit');
     }
@@ -91,7 +92,7 @@ export class YaExitHandler implements ExitPoolHandler {
           signerAddress,
           slippage,
           signer,
-          SimulationType.Static,
+          SimulationType.VaultModel,
           relayerSignature,
           this.exitInfo.tokensToUnwrap
         );
@@ -124,7 +125,7 @@ export class YaExitHandler implements ExitPoolHandler {
       const amount = BigNumber.from(estimatedAmountsOut[i]);
 
       // Check if the token is a wrapper
-      const underlyingToken = underlyingWrapperMap[token];
+      const underlyingToken = underlyingWrapperMap[token.toLowerCase()];
 
       if (underlyingToken) {
         wrapperAmounts.push({ wrapper: token, amount });
@@ -134,6 +135,7 @@ export class YaExitHandler implements ExitPoolHandler {
           isWrap: false,
         });
         // If it's a wrapper, add the amount to the underlying token's amount
+        console.log('underlyingToken', underlyingToken);
         if (!aggregatedAmounts[underlyingToken]) {
           aggregatedAmounts[underlyingToken] = BigNumber.from(0);
         }
@@ -150,10 +152,11 @@ export class YaExitHandler implements ExitPoolHandler {
 
     // Update exitInfo with aggregated results
     if (this.exitTx) {
-      this.exitInfo.tokensOut = Object.keys(aggregatedAmounts);
+      this.exitTx.tokensOut = Object.keys(aggregatedAmounts);
       this.exitTx.expectedAmountsOut = Object.values(aggregatedAmounts).map(
         amount => amount.toString()
       );
+      console.log('expectedAmountsOut1', this.exitTx.expectedAmountsOut);
       const unwrapCalls = wrapperAmounts.map(({ wrapper, amount }) => {
         return Relayer.encodeUnwrapErc4626({
           wrappedToken: wrapper,

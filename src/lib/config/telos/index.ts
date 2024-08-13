@@ -26,13 +26,15 @@ const config: Config = {
   explorer: 'https://teloscan.io',
   explorerName: 'Teloscan',
   subgraph:
-    'https://api.goldsky.com/api/public/project_clnbo3e3c16lj33xva5r2aqk7/subgraphs/symmetric-telos/prod/gn',
+    'https://api.goldsky.com/api/public/project_clnbo3e3c16lj33xva5r2aqk7/subgraphs/symmetric-telos/1.0.7/gn',
+  // 'https://api.goldsky.com/api/public/project_clnbo3e3c16lj33xva5r2aqk7/subgraphs/symmetric-telos/prod/gn',
   // 'https://telosapi.0xgraph.xyz/api/public/3d0109fa-bf83-48be-8595-24ecf0ed29fb/subgraphs/symmetric-telos/1.0.9/gn',
   balancerApi: '',
   poolsUrlV2:
     'https://storageapi.fleek.co/johngrantuk-team-bucket/poolsV2.json',
   subgraphs: {
     main: [
+      'https://api.goldsky.com/api/public/project_clnbo3e3c16lj33xva5r2aqk7/subgraphs/symmetric-telos/1.0.7/gn',
       'https://api.goldsky.com/api/public/project_clnbo3e3c16lj33xva5r2aqk7/subgraphs/symmetric-telos/prod/gn',
       'https://telosapi.0xgraph.xyz/api/public/3d0109fa-bf83-48be-8595-24ecf0ed29fb/subgraphs/symmetric-telos/1.0.9/gn',
       'https://thegraph.telos.net/subgraphs/name/symmetric-telos/symmetric-telos-graph',

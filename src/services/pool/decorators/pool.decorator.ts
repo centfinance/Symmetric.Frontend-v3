@@ -31,10 +31,6 @@ export class PoolDecorator {
       const rewardData: any = localStorage.getItem('REWARD_PRICE');
       if (rewardData) {
         const data = JSON.parse(rewardData);
-        console.log(
-          isPriceOutdated(data.timestamp),
-          !data[`${rewardSymbol}_price`]
-        );
         if (isPriceOutdated(data.timestamp) || !data[`${rewardSymbol}_price`]) {
           setRewardPriceInLocalStorage()
             .then(() => {
@@ -73,7 +69,7 @@ export class PoolDecorator {
       );
       rewards = await request.json();
     }
-    console.log(rewards);
+
     const promises = processedPools.map(async pool => {
       const poolService = new this.poolServiceClass(pool);
 
@@ -119,7 +115,7 @@ export class PoolDecorator {
    */
   private async getSnapshots(): Promise<Pool[]> {
     const blockNumber = await getTimeTravelBlock();
-    console.log(blockNumber);
+
     const block = { number: blockNumber };
     const isInPoolIds = { id: { in: this.pools.map(pool => pool.id) } };
     try {
