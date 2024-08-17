@@ -8,6 +8,16 @@ const tokens: TokenConstants = {
     input: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
     output: '0x8d97cea50351fb4329d591682b148d43a0c3611b',
   },
+  YaWrapSymbolMap: {
+    woUSDC: 'USDC',
+    woUSDT: 'USDT',
+    woUSDM: 'USDM',
+  },
+  YaNestedSymbolMap: {
+    myaUSDC: 'USDC',
+    myaUSDT: 'USDT',
+    myaUSDM: 'USDM',
+  },
   Addresses: {
     nativeAsset: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
     wNativeAsset: '0xD102cE6A4dB07D247fcc28F366A623Df0938CA9E',

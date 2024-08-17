@@ -203,6 +203,37 @@ export const joinPoolProvider = (
   );
 
   const amountsToApprove = computed(() => {
+    // if (isYaPool.value) {
+    //   return amountsIn.value.flatMap(amountIn => {
+    //     const wrapper =
+    //       configService.network.tokens.Addresses.yaPools?.[pool.value.id]
+    //         .underlyingWrapperMap[amountIn.address];
+    //     if (!wrapper) {
+    //       throw new Error(`Wrapper not found for token: ${amountIn.address}`);
+    //     }
+
+    //     return [
+    //       {
+    //         address: amountIn.address,
+    //         amount: amountIn.value,
+    //         spender: appNetworkConfig.addresses.vault,
+    //       },
+    //       {
+    //         address: wrapper,
+    //         amount: amountIn.value,
+    //         spender: appNetworkConfig.addresses.vault,
+    //       },
+    //     ];
+    //   });
+    // }
+    return amountsIn.value.map(amountIn => ({
+      address: amountIn.address,
+      amount: amountIn.value,
+      spender: appNetworkConfig.addresses.vault,
+    }));
+  });
+
+  const wrapsToApprove = computed(() => {
     if (isYaPool.value) {
       return amountsIn.value.flatMap(amountIn => {
         const wrapper =
@@ -214,11 +245,6 @@ export const joinPoolProvider = (
 
         return [
           {
-            address: amountIn.address,
-            amount: amountIn.value,
-            spender: appNetworkConfig.addresses.vault,
-          },
-          {
             address: wrapper,
             amount: amountIn.value,
             spender: appNetworkConfig.addresses.vault,
@@ -226,11 +252,7 @@ export const joinPoolProvider = (
         ];
       });
     }
-    return amountsIn.value.map(amountIn => ({
-      address: amountIn.address,
-      amount: amountIn.value,
-      spender: appNetworkConfig.addresses.vault,
-    }));
+    return [];
   });
 
   const isLoadingQuery = computed(
@@ -315,6 +337,15 @@ export const joinPoolProvider = (
       skipAllowanceCheck: true, // Done once beforeMount
     });
 
+    const tokenWrapApprovalActions = await getTokenApprovalActions({
+      amountsToApprove: wrapsToApprove.value,
+      spender: appNetworkConfig.addresses.vault,
+      actionType: ApprovalAction.YaWrap,
+      skipAllowanceCheck: true, // Done once beforeMount
+    });
+
+    tokenApprovalActions.push(...tokenWrapApprovalActions);
+    console.log('shouldSignRelayer:', relayerApproval.isUnlocked.value);
     approvalActions.value = shouldSignRelayer.value
       ? [relayerApprovalAction.value, ...tokenApprovalActions]
       : tokenApprovalActions;

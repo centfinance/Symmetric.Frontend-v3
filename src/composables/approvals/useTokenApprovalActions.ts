@@ -56,6 +56,13 @@ export default function useTokenApprovalActions() {
   /**
    * METHODS
    */
+  function yaSymbol(symbol: string): string {
+    if (configService.network.tokens.YaWrapSymbolMap) {
+      return configService.network.tokens.YaWrapSymbolMap[symbol] || symbol;
+    }
+    return symbol;
+  }
+
   function actionLabel(actionType: ApprovalAction, symbol: string): string {
     switch (actionType) {
       case ApprovalAction.Locking:
@@ -68,6 +75,9 @@ export default function useTokenApprovalActions() {
         return t('transactionSummary.unapprove', [symbol]);
       case ApprovalAction.Unwrapping:
         return t('transactionSummary.approveForUnwrapping', [symbol]);
+      case ApprovalAction.YaWrap: {
+        return t('transactionSummary.approveForLending', [yaSymbol(symbol)]);
+      }
       default:
         return t('transactionSummary.approveForInvesting', [symbol]);
     }
@@ -85,6 +95,10 @@ export default function useTokenApprovalActions() {
         return t('transactionSummary.tooltips.unapprove', [symbol]);
       case ApprovalAction.Unwrapping:
         return t('transactionSummary.tooltips.approveForUnwrapping', [symbol]);
+      case ApprovalAction.YaWrap:
+        return t('transactionSummary.tooltips.approveForLending', [
+          yaSymbol(symbol),
+        ]);
       default:
         return t('transactionSummary.tooltips.approveForInvesting', [symbol]);
     }

@@ -372,6 +372,9 @@ export const tokensProvider = (
     if (isSameAddress(tokenAddress, nativeAsset.address)) return false;
 
     const allowance = allowanceFor(tokenAddress, spenderAddress);
+    console.log(allowance.toString());
+    console.log('amount', amount);
+    console.log('allowance', allowance.lt(amount));
     return allowance.lt(amount);
   }
 

@@ -14,12 +14,12 @@ import {
 } from './exit-pool.handler';
 import { getBalancerSDK } from '@/dependencies/balancer-sdk';
 import { BigNumber, formatFixed, parseFixed } from '@ethersproject/bignumber';
-import { bnum, isSameAddress } from '@/lib/utils';
+import { bnum, isSameAddress, selectByAddress } from '@/lib/utils';
 import { flatTokenTree } from '@/composables/usePoolHelpers';
 import { getAddress } from '@ethersproject/address';
 import { TransactionBuilder } from '@/services/web3/transactions/transaction.builder';
 import { configService } from '@/services/config/config.service';
-import { convertERC4626Wrap } from '@/lib/utils/balancer/erc4626Wrappers';
+import { convertERC4626Unwrap } from '@/lib/utils/balancer/erc4626Wrappers';
 
 type BalancerSdkType = ReturnType<typeof getBalancerSDK>;
 export type ExitResponse = Awaited<
@@ -44,9 +44,7 @@ export class YaExitHandler implements ExitPoolHandler {
   ) {}
 
   async exit(params: ExitParams): Promise<TransactionResponse> {
-    console.log('exit params', params);
     await this.queryExit(params);
-    console.log('exitTx', this.exitTx);
     if (!this.exitTx) {
       throw new Error('Could not query generalised exit');
     }
@@ -61,6 +59,7 @@ export class YaExitHandler implements ExitPoolHandler {
     bptIn,
     signer,
     slippageBsp,
+    tokenInfo,
     relayerSignature,
     approvalActions,
     bptInValid,
@@ -79,6 +78,7 @@ export class YaExitHandler implements ExitPoolHandler {
 
     const yaPools =
       configService.network.tokens.Addresses.yaPools?.[this.pool.value.id];
+
     const underlyingWrapperMap = yaPools?.wrapperUnderlyingMap || {};
 
     const aggregatedAmounts: { [address: string]: BigNumber } = {};
@@ -92,7 +92,7 @@ export class YaExitHandler implements ExitPoolHandler {
           signerAddress,
           slippage,
           signer,
-          SimulationType.VaultModel,
+          SimulationType.Static,
           relayerSignature,
           this.exitInfo.tokensToUnwrap
         );
@@ -122,18 +122,19 @@ export class YaExitHandler implements ExitPoolHandler {
     // Iterate over tokensOut and estimatedAmountsOut
     for (let i = 0; i < tokensOut.length; i++) {
       const token = tokensOut[i];
-      const amount = BigNumber.from(estimatedAmountsOut[i]);
+      let amount = BigNumber.from(estimatedAmountsOut[i]);
 
       // Check if the token is a wrapper
       const underlyingToken = underlyingWrapperMap[token.toLowerCase()];
 
       if (underlyingToken) {
+        const wrapper = selectByAddress(tokenInfo, token);
+        if (wrapper && wrapper.decimals === 18) {
+          amount = amount.sub('1000000000000');
+        }
         wrapperAmounts.push({ wrapper: token, amount });
 
-        const unwrapAmount = await convertERC4626Wrap(token, {
-          amount,
-          isWrap: false,
-        });
+        const unwrapAmount = await convertERC4626Unwrap(token, amount);
         // If it's a wrapper, add the amount to the underlying token's amount
         console.log('underlyingToken', underlyingToken);
         if (!aggregatedAmounts[underlyingToken]) {
@@ -149,7 +150,15 @@ export class YaExitHandler implements ExitPoolHandler {
         aggregatedAmounts[token] = aggregatedAmounts[token].add(amount);
       }
     }
-
+    console.log(
+      'this.exitInfo',
+      this.exitTx?.expectedAmountsOut.map((amount, i) => {
+        return {
+          amount: amount.toString(),
+          tokens: this.exitTx?.tokensOut[i],
+        };
+      })
+    );
     // Update exitInfo with aggregated results
     if (this.exitTx) {
       this.exitTx.tokensOut = Object.keys(aggregatedAmounts);
@@ -162,7 +171,7 @@ export class YaExitHandler implements ExitPoolHandler {
           wrappedToken: wrapper,
           sender: signerAddress,
           recipient: signerAddress,
-          amount,
+          amount: amount,
           outputReference: 0,
         });
       });
@@ -218,5 +227,10 @@ export class YaExitHandler implements ExitPoolHandler {
     });
 
     return amountsOut;
+  }
+
+  roundBigNumberTo6Decimals(amount: BigNumber): BigNumber {
+    const factor = BigNumber.from('1000000000000'); // 10^12
+    return amount.add(factor).sub(1).div(factor).mul(factor);
   }
 }

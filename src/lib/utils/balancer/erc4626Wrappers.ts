@@ -93,13 +93,53 @@ export async function convertERC4626Wrap(
   }
 }
 
+export async function convertERC4626Wrap2(wrapper: string, amount: BigNumber) {
+  try {
+    console.log(amount.toString());
+    const wrapperContract = new Contract(
+      wrapper,
+      [
+        'function convertToShares(uint256 assets) public view returns (uint256)',
+      ],
+      rpcProviderService.jsonProvider
+    );
+
+    const shares = await wrapperContract.convertToShares(amount);
+    console.log('shares2', shares.toString());
+    return shares;
+
+    // return isWrap ? amount.mul(ONE).div(rate) : amount.mul(rate).div(ONE);
+  } catch (error) {
+    throw new Error('Failed to convert to ERC4626 wrapper', { cause: error });
+  }
+}
+
+export async function convertERC4626Unwrap(wrapper: string, amount: BigNumber) {
+  try {
+    const wrapperContract = new Contract(
+      wrapper,
+      [
+        'function convertToAssets(uint256 shares) public view returns (uint256)',
+      ],
+      rpcProviderService.jsonProvider
+    );
+
+    const shares = await wrapperContract.convertToAssets(amount);
+    console.log('assets', shares.toString());
+    return shares;
+
+    // return isWrap ? amount.mul(ONE).div(rate) : amount.mul(rate).div(ONE);
+  } catch (error) {
+    throw new Error('Failed to convert to ERC4626 wrapper', { cause: error });
+  }
+}
+
 export async function convertYieldWrap(
   wrapper: string,
   userAddress: string,
   { amount }: ConversionParams
 ) {
   try {
-    // const provider = getSigner();
     const shares = await walletService.txBuilder.contract.callStatic<BigNumber>(
       {
         contractAddress: wrapper,
@@ -113,6 +153,7 @@ export async function convertYieldWrap(
     );
 
     console.log('shares', shares.toString());
+    return shares;
 
     // return isWrap ? amount.mul(ONE).div(rate) : amount.mul(rate).div(ONE);
   } catch (error) {

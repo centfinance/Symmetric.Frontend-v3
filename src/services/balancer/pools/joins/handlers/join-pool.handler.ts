@@ -14,6 +14,7 @@ export type JoinParams = {
   relayerSignature?: string;
   approvalActions: TransactionActionInfo[];
   transactionDeadline: number;
+  isJoin?: boolean;
 };
 
 export type QueryOutput = {

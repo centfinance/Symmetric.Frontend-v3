@@ -1535,6 +1535,7 @@
   "transactionSummary": {
     "stake": "{amount} in {pool}",
     "unstake": "{amount} from {pool}",
+    "approveForLending": "Approve {0} for lending",
     "approveForInvesting": "Approve {0} for adding liquidity",
     "approveForLocking": "Approve {0} for locking",
     "approveForStaking": "Approve {0} for staking",
@@ -1554,6 +1555,7 @@
     "migratePool": "{0} {1} to {2}",
     "wrapUnwrap": "{0} {1} to {2}",
     "tooltips": {
+      "approveForLending": "As Yield Accelerated pools lend a portion of the assets to a lending protocol, You must approve {0} to be sent to the lending protocol. Approvals are required once per token, per wallet.",
       "approveForInvesting": "You must approve {0} to add liquidity for this token on Symmetric. Approvals are required once per token, per wallet.",
       "approveForLocking": "You must approve {0} to lock this token. Approvals are required once per token, per wallet.",
       "approveForStaking": "You must approve {0} to stake this token on Symmetric. Approvals are required once per token, per wallet.",

@@ -52,7 +52,6 @@ import { POOLS } from '@/constants/pools';
 import { captureBalancerException } from '@/lib/utils/errors';
 import { configService } from '@/services/config/config.service';
 import { ApprovalAction } from '@/composables/approvals/types';
-import { MaxUint256 } from '@ethersproject/constants';
 
 /**
  * TYPES
@@ -111,7 +110,8 @@ export const exitPoolProvider = (
   const { poolJoinTokens } = usePoolHelpers(pool);
   const { relayerSignature, relayerApprovalAction, relayerApprovalTx } =
     useRelayerApproval(RelayerType.BATCH);
-  const { getTokenApprovalActions } = useTokenApprovalActions();
+  const { getTokenApprovalActions, updateAllowancesFor } =
+    useTokenApprovalActions();
 
   const debounceQueryExit = debounce(queryExit, debounceQueryExitMillis);
   const debounceGetSingleAssetMax = debounce(
@@ -204,7 +204,7 @@ export const exitPoolProvider = (
         const approvals = yaPool.wrappers.map(wrapper => {
           return {
             address: wrapper,
-            amount: MaxUint256.toString(),
+            amount: bptIn.value,
             spender: appNetworkConfig.addresses.vault,
           };
         });
@@ -225,7 +225,7 @@ export const exitPoolProvider = (
       actionType: ApprovalAction.Unwrapping,
       skipAllowanceCheck: true, // Done once beforeMount
     });
-
+    console.log('tokenApprovalActions:', tokenApprovalActions);
     approvalActions.value = shouldSignRelayer.value
       ? [relayerApprovalAction.value, ...tokenApprovalActions]
       : tokenApprovalActions;
@@ -286,9 +286,10 @@ export const exitPoolProvider = (
   const exitTokenAddresses = computed((): string[] => {
     let addresses: string[] = [];
 
-    addresses = isDeep(pool.value)
-      ? tokenTreeNodes(pool.value.tokens)
-      : pool.value.tokensList;
+    addresses =
+      isDeep(pool.value) || isYa(pool.value)
+        ? tokenTreeNodes(pool.value.tokens)
+        : pool.value.tokensList;
 
     return removeAddress(pool.value.address, addresses);
   });
@@ -422,6 +423,7 @@ export const exitPoolProvider = (
     exitPoolService.setExitHandler(exitHandlerType.value);
 
     try {
+      await nextTick();
       await setApprovalActions();
 
       const output = await exitPoolService.queryExit({
@@ -599,7 +601,7 @@ export const exitPoolProvider = (
     }
   });
 
-  watch(relayerApprovalAction, async () => await setApprovalActions());
+  // watch(relayerApprovalAction, async () => await setApprovalActions());
 
   /**
    * LIFECYCLE
@@ -614,6 +616,8 @@ export const exitPoolProvider = (
     if (!isSingleAssetExit.value) {
       setInitialPropAmountsOut();
     }
+    // Make sure allowances on the vault are up to date.
+    updateAllowancesFor(appNetworkConfig.addresses.vault);
   });
 
   onMounted(() => {

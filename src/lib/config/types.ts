@@ -34,6 +34,8 @@ export type TokenConstants = {
   Popular: {
     Symbols: string[];
   };
+  YaWrapSymbolMap?: Record<string, string>;
+  YaNestedSymbolMap?: Record<string, string>;
   Addresses: CommonTokens;
   InitialSwapTokens: {
     input: string;

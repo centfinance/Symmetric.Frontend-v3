@@ -13,10 +13,7 @@ import { bnum, isSameAddress, selectByAddress } from '@/lib/utils';
 import { TransactionBuilder } from '@/services/web3/transactions/transaction.builder';
 import { configService } from '@/services/config/config.service';
 import { AddressZero } from '@ethersproject/constants';
-import {
-  convertERC4626Wrap,
-  convertYieldWrap,
-} from '@/lib/utils/balancer/erc4626Wrappers';
+import { convertERC4626Wrap } from '@/lib/utils/balancer/erc4626Wrappers';
 import { BigNumber } from '@ethersproject/bignumber';
 
 type JoinResponse = Awaited<
@@ -37,6 +34,7 @@ export class YaJoinHandler implements JoinPoolHandler {
   ) {}
 
   async join(params: JoinParams): Promise<TransactionResponse> {
+    params.isJoin = true;
     await this.queryJoin(params);
 
     if (!this.lastJoinRes) {
@@ -56,6 +54,8 @@ export class YaJoinHandler implements JoinPoolHandler {
     slippageBsp,
     relayerSignature,
   }: JoinParams): Promise<QueryOutput> {
+    console.log('relayerSignature', relayerSignature);
+
     const evmAmountsIn: string[] = [];
     const tokenAddresses: string[] = [];
     const wrapperAmountsIn: { wrapper: string; amount: BigNumber }[] = [];
@@ -82,15 +82,18 @@ export class YaJoinHandler implements JoinPoolHandler {
       const underlyingAmount = parsedValue.mul(20).div(100);
       const eightyPercent = parsedValue.mul(80).div(100);
 
-      await convertYieldWrap(wrapper, signerAddress, {
+      const wAmount = await convertERC4626Wrap(wrapper, {
         amount: eightyPercent,
         isWrap: true,
       });
 
-      const wrapperAmount = await convertERC4626Wrap(wrapper, {
-        amount: eightyPercent,
-        isWrap: true,
-      });
+      let wrapperAmount = wAmount;
+      if (token.decimals === 18) {
+        const buffer = eightyPercent.mul(2).div(100000000);
+        console.log('buffer', buffer.toString());
+        wrapperAmount = wrapperAmount.sub(buffer);
+      }
+
       console.log('wrapperAmount', wrapperAmount.toString());
       wrapperAmountsIn.push({ wrapper: wrapper, amount: eightyPercent });
 
@@ -126,12 +129,13 @@ export class YaJoinHandler implements JoinPoolHandler {
       });
     });
 
+    console.log(wrapperAmountsIn);
+
     if (relayerSignature) {
       this.lastJoinRes.encodedCalls.splice(1, 0, ...wrapCalls);
     } else {
       this.lastJoinRes.encodedCalls.unshift(...wrapCalls);
     }
-
     this.lastJoinRes.encodedCall = balancerRelayerInterface.encodeFunctionData(
       'multicall',
       [this.lastJoinRes.encodedCalls]
@@ -148,6 +152,7 @@ export class YaJoinHandler implements JoinPoolHandler {
     ).toNumber();
 
     if (bnum(bptOut).eq(0)) throw new Error('Not enough liquidity.');
+
     return {
       bptOut,
       priceImpact,

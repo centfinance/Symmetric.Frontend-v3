@@ -751,6 +751,15 @@ export function usePoolHelpers(pool: Ref<AnyPool> | Ref<undefined>) {
   function poolWeightsLabel(pool: Pool): string {
     if (!pool?.onchain?.tokens) return '';
 
+    if (isYaPool.value) {
+      const map = configService.network.tokens.YaNestedSymbolMap;
+      return Object.values(pool.onchain.tokens)
+        .map(token => {
+          return map && map[token.symbol] ? map[token.symbol] : token.symbol;
+        })
+        .join(', ');
+    }
+
     if (isStableLike(pool.poolType)) {
       return Object.values(pool.onchain.tokens)
         .map(token => token.symbol)

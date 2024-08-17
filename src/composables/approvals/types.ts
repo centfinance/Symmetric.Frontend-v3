@@ -5,4 +5,5 @@ export enum ApprovalAction {
   Swapping,
   Unapprove,
   Unwrapping,
+  YaWrap,
 }
