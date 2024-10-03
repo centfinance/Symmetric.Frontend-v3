@@ -11,12 +11,13 @@ const {
   // ARBITRUM,
   // AVALANCHE,
   // BASE,
-  GNOSIS,
+  // GNOSIS,
   // POLYGON,
   // ZKEVM,
-  TELOS,
-  CELO,
-  METER,
+  // TELOS,
+  // CELO,
+  // METER,
+  VANAMOKSHA,
 } = Network;
 
 export class WalletConnectConnector extends Connector {
@@ -24,7 +25,7 @@ export class WalletConnectConnector extends Connector {
   async connect() {
     const provider = await EthereumProvider.init({
       projectId: '90da6e11e9ce2448f2872dae5e52b189',
-      chains: [TELOS],
+      chains: [VANAMOKSHA],
       optionalChains: [
         // AVALANCHE,
         // ARBITRUM,
@@ -32,9 +33,9 @@ export class WalletConnectConnector extends Connector {
         // GNOSIS,
         // POLYGON,
         // ZKEVM,
-        CELO,
-        GNOSIS,
-        METER,
+        // CELO,
+        // GNOSIS,
+        // METER,
       ],
       rpcMap: {
         // [MAINNET]: configService.getNetworkRpc(MAINNET),
@@ -44,10 +45,11 @@ export class WalletConnectConnector extends Connector {
         // [GNOSIS]: configService.getNetworkRpc(GNOSIS),
         // [POLYGON]: configService.getNetworkRpc(POLYGON),
         // [ZKEVM]: configService.getNetworkRpc(ZKEVM),
-        [TELOS]: configService.getNetworkRpc(TELOS),
-        [CELO]: configService.getNetworkRpc(CELO),
-        [GNOSIS]: configService.getNetworkRpc(GNOSIS),
-        [METER]: configService.getNetworkRpc(METER),
+        // [TELOS]: configService.getNetworkRpc(TELOS),
+        // [CELO]: configService.getNetworkRpc(CELO),
+        // [GNOSIS]: configService.getNetworkRpc(GNOSIS),
+        // [METER]: configService.getNetworkRpc(METER),
+        [VANAMOKSHA]: configService.getNetworkRpc(VANAMOKSHA),
       },
       showQrModal: true,
       qrModalOptions: { themeMode: useDarkMode().darkMode ? 'dark' : 'light' },
